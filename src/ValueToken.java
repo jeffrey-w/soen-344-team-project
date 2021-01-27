@@ -1,10 +1,10 @@
 import java.util.Objects;
 
-public class SemanticToken extends Token {
+public class ValueToken extends Token {
 
     private final Object value;
 
-    public SemanticToken(TokenType type, Object value) {
+    public ValueToken(TokenType type, Object value) {
         super(type);
         this.value = Objects.requireNonNull(value);
     }
