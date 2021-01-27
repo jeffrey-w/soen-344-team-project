@@ -5,21 +5,22 @@ import java.util.List;
 
 public class PICLang {
 
-    private static final int INVALID_ARGUMENT = 0x10;
-    private static final int DATA_ERROR = 0x20;
+    private static final int USAGE_ERROR = 0x10;
+    private static final int INVALID_ARGUMENT = 0x20;
 
     public static void main(String[] args) {
         try {
             run(args[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Usage: java PICLang <filename>");
-            System.exit(DATA_ERROR);
+            System.err.println("Usage: PICLang <filename>");
+            System.exit(USAGE_ERROR);
         }
     }
 
     private static void run(String file) {
         try {
-            Scanner scanner = new Scanner(new String(Files.readAllBytes(Path.of(file))));
+            byte[] bytes = Files.readAllBytes(Path.of(file));
+            Scanner scanner = new Scanner(new String(bytes));
             List<Token> tokens = scanner.scan();
             for (Token token : tokens) {
                 System.out.println(token);
