@@ -3,10 +3,10 @@ import java.util.regex.Pattern;
 
 public class Scanner {
 
+    private static final int MAX_HEX_DIGITS = 2;
     private static final Pattern WHITESPACE_CHARS = Pattern.compile("\\s");
     private static final Pattern ALPHA_CHARS = Pattern.compile("[a-zA-Z]");
     private static final Pattern DIGIT_CHARS = Pattern.compile("\\d");
-    private static final Pattern HEX_CHARS = Pattern.compile("[A-F]");
     private static final Pattern WORD_CHARS = Pattern.compile("[a-zA-Z\\d]");
     private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
 
@@ -40,7 +40,7 @@ public class Scanner {
     }
 
     private static Token tokenOf(Token.TokenType type, Object value) {
-        return new SemanticToken(type, value);
+        return new ValueToken(type, value);
     }
 
     private int start, current;
@@ -151,13 +151,10 @@ public class Scanner {
     }
 
     private Token hexNumber() {
-        int count = 0;
         start++; // Consume '$' character.
-        while (isHexDigit(lookAhead())) {
-            count++;
+        for (int i = 0; i < MAX_HEX_DIGITS; i++) {
             nextChar();
         }
-        // TODO error on odd value of count
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
     }
 
@@ -172,15 +169,12 @@ public class Scanner {
         while (isAlphanumeric(lookAhead())) {
             nextChar();
         }
-        return RESERVED_WORDS.getOrDefault(currentLexeme(), tokenOf(Token.TokenType.IDENT, currentLexeme()));
+        String lexeme = currentLexeme();
+        return RESERVED_WORDS.getOrDefault(lexeme, tokenOf(Token.TokenType.IDENT, lexeme));
     }
 
     private boolean isWhitespace(char c) {
         return WHITESPACE_CHARS.matcher(String.valueOf(c)).matches();
-    }
-
-    private boolean isHexDigit(char c) {
-        return isDigit(c) || HEX_CHARS.matcher(String.valueOf(c)).matches();
     }
 
     private boolean isDigit(char c) {
