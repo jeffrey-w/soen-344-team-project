@@ -3,9 +3,9 @@ import java.util.regex.Pattern;
 
 public class Scanner {
 
-    private static final int MAX_HEX_DIGITS = 2;
     private static final Pattern WHITESPACE_CHARS = Pattern.compile("\\s");
     private static final Pattern ALPHA_CHARS = Pattern.compile("[a-zA-Z]");
+    private static final Pattern HEX_CHARS = Pattern.compile("[A-F]");
     private static final Pattern DIGIT_CHARS = Pattern.compile("\\d");
     private static final Pattern WORD_CHARS = Pattern.compile("[a-zA-Z\\d]");
     private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
@@ -63,8 +63,7 @@ public class Scanner {
 
     private Token nextToken() {
         skipWhitespace();
-        char c = nextChar();
-        switch (c) {
+        switch (nextChar()) {
             case '\0':
                 return tokenOf(Token.TokenType.EOF);
             case '*':
@@ -119,32 +118,33 @@ public class Scanner {
                 return tokenOf(Token.TokenType.SEMICOLON);
             case '$':
                 return hexNumber();
+            default:
+                if (isDigit()) {
+                    return number();
+                }
+                if (isAlpha()) {
+                    return identifier();
+                }
+                return tokenOf(Token.TokenType.NULL); // TODO is this an error (i.e. unexpected character)?
         }
-        if (isDigit(c)) {
-            return number();
-        }
-        if (isAlpha(c)) {
-            return identifier();
-        }
-        return tokenOf(Token.TokenType.NULL);
     }
 
     private void skipWhitespace() {
-        while (isWhitespace(lookAhead())) {
+        while (isWhitespace()) {
             nextChar();
         }
         start = current;
     }
 
     private char nextChar() {
-        if (current == source.length()) {
+        if (current >= source.length()) {
             return '\0';
         }
         return source.charAt(current++);
     }
 
     private char lookAhead() {
-        if (current == source.length()) {
+        if (current >= source.length()) {
             return '\0';
         }
         return source.charAt(current);
@@ -152,41 +152,45 @@ public class Scanner {
 
     private Token hexNumber() {
         start++; // Consume '$' character.
-        for (int i = 0; i < MAX_HEX_DIGITS; i++) {
+        while (isHexDigit()) { // TODO error if more than 2 digits
             nextChar();
         }
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
     }
 
     private Token number() {
-        while (isDigit(lookAhead())) {
+        while (isDigit()) { // TODO error if more than 3 digits
             nextChar();
         }
         return tokenOf(Token.TokenType.NUMBER, Double.parseDouble(currentLexeme()));
     }
 
     private Token identifier() {
-        while (isAlphanumeric(lookAhead())) {
+        while (isAlphanumeric()) {
             nextChar();
         }
         String lexeme = currentLexeme();
         return RESERVED_WORDS.getOrDefault(lexeme, tokenOf(Token.TokenType.IDENT, lexeme));
     }
 
-    private boolean isWhitespace(char c) {
-        return WHITESPACE_CHARS.matcher(String.valueOf(c)).matches();
+    private boolean isWhitespace() {
+        return WHITESPACE_CHARS.matcher(String.valueOf(lookAhead())).matches();
     }
 
-    private boolean isDigit(char c) {
-        return DIGIT_CHARS.matcher(String.valueOf(c)).matches();
+    private boolean isHexDigit() {
+        return isDigit() || HEX_CHARS.matcher(String.valueOf(lookAhead())).matches();
     }
 
-    private boolean isAlpha(char c) {
-        return ALPHA_CHARS.matcher(String.valueOf(c)).matches();
+    private boolean isDigit() {
+        return DIGIT_CHARS.matcher(String.valueOf(lookAhead())).matches();
     }
 
-    private boolean isAlphanumeric(char c) {
-        return WORD_CHARS.matcher(String.valueOf(c)).matches();
+    private boolean isAlpha() {
+        return ALPHA_CHARS.matcher(String.valueOf(lookAhead())).matches();
+    }
+
+    private boolean isAlphanumeric() {
+        return WORD_CHARS.matcher(String.valueOf(lookAhead())).matches();
     }
 
     private String currentLexeme() {
