@@ -1,6 +1,6 @@
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class PICLang {
@@ -19,7 +19,7 @@ public class PICLang {
 
     private static void run(String file) {
         try {
-            byte[] bytes = Files.readAllBytes(Path.of(file));
+            byte[] bytes = Files.readAllBytes(Paths.get(file));
             Scanner scanner = new Scanner(new String(bytes));
             List<Token> tokens = scanner.scan();
             for (Token token : tokens) {
