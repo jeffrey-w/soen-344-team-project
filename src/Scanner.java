@@ -63,7 +63,8 @@ public class Scanner {
 
     private Token nextToken() {
         skipWhitespace();
-        switch (nextChar()) {
+        char character = nextChar();
+        switch (character) {
             case '\0':
                 return tokenOf(Token.TokenType.EOF);
             case '*':
@@ -119,10 +120,10 @@ public class Scanner {
             case '$':
                 return hexNumber();
             default:
-                if (isDigit()) {
+                if (isDigit(character)) {
                     return number();
                 }
-                if (isAlpha()) {
+                if (isAlpha(character)) {
                     return identifier();
                 }
                 return tokenOf(Token.TokenType.NULL); // TODO is this an error (i.e. unexpected character)?
@@ -152,21 +153,21 @@ public class Scanner {
 
     private Token hexNumber() {
         start++; // Consume '$' character.
-        while (isHexDigit()) { // TODO error if more than 2 digits
+        while (isHexDigit(lookAhead())) { // TODO error if more than 2 digits
             nextChar();
         }
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
     }
 
     private Token number() {
-        while (isDigit()) { // TODO error if more than 3 digits
+        while (isDigit(lookAhead())) { // TODO error if more than 3 digits
             nextChar();
         }
         return tokenOf(Token.TokenType.NUMBER, Double.parseDouble(currentLexeme()));
     }
 
     private Token identifier() {
-        while (isAlphanumeric()) {
+        while (isAlphanumeric(lookAhead())) {
             nextChar();
         }
         String lexeme = currentLexeme();
@@ -177,20 +178,20 @@ public class Scanner {
         return WHITESPACE_CHARS.matcher(String.valueOf(lookAhead())).matches();
     }
 
-    private boolean isHexDigit() {
-        return isDigit() || HEX_CHARS.matcher(String.valueOf(lookAhead())).matches();
+    private boolean isHexDigit(char c) {
+        return isDigit(c) || HEX_CHARS.matcher(String.valueOf(c)).matches();
     }
 
-    private boolean isDigit() {
-        return DIGIT_CHARS.matcher(String.valueOf(lookAhead())).matches();
+    private boolean isDigit(char c) {
+        return DIGIT_CHARS.matcher(String.valueOf(c)).matches();
     }
 
-    private boolean isAlpha() {
-        return ALPHA_CHARS.matcher(String.valueOf(lookAhead())).matches();
+    private boolean isAlpha(char c) {
+        return ALPHA_CHARS.matcher(String.valueOf(c)).matches();
     }
 
-    private boolean isAlphanumeric() {
-        return WORD_CHARS.matcher(String.valueOf(lookAhead())).matches();
+    private boolean isAlphanumeric(char c) {
+        return WORD_CHARS.matcher(String.valueOf(c)).matches();
     }
 
     private String currentLexeme() {
