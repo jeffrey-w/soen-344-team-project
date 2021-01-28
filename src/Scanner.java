@@ -7,7 +7,6 @@ public class Scanner {
     private static final Pattern ALPHA_CHARS = Pattern.compile("[a-zA-Z]");
     private static final Pattern HEX_CHARS = Pattern.compile("[A-F]");
     private static final Pattern DIGIT_CHARS = Pattern.compile("\\d");
-    private static final Pattern WORD_CHARS = Pattern.compile("[a-zA-Z\\d]");
     private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
 
     static {
@@ -63,7 +62,7 @@ public class Scanner {
 
     private Token nextToken() {
         skipWhitespace();
-        char character = nextChar();
+        char character = nextCharacter();
         switch (character) {
             case '\0':
                 return tokenOf(Token.TokenType.EOF);
@@ -86,14 +85,14 @@ public class Scanner {
             case '#':
                 return tokenOf(Token.TokenType.NEQ);
             case '>':
-                if (lookAhead() == '=') {
-                    nextChar();
+                if (peekCharacter() == '=') {
+                    nextCharacter();
                     return tokenOf(Token.TokenType.GEQ);
                 }
                 return tokenOf(Token.TokenType.GTR);
             case '<':
-                if (lookAhead() == '=') {
-                    nextChar();
+                if (peekCharacter() == '=') {
+                    nextCharacter();
                     return tokenOf(Token.TokenType.LEQ);
                 }
                 return tokenOf(Token.TokenType.LSS);
@@ -102,8 +101,8 @@ public class Scanner {
             case ',':
                 return tokenOf(Token.TokenType.COMMA);
             case ':':
-                if (lookAhead() == '=') {
-                    nextChar();
+                if (peekCharacter() == '=') {
+                    nextCharacter();
                     return tokenOf(Token.TokenType.BECOMES);
                 }
                 return tokenOf(Token.TokenType.COLON);
@@ -132,19 +131,19 @@ public class Scanner {
 
     private void skipWhitespace() {
         while (isWhitespace()) {
-            nextChar();
+            nextCharacter();
         }
         start = current;
     }
 
-    private char nextChar() {
+    private char nextCharacter() {
         if (current >= source.length()) {
             return '\0';
         }
         return source.charAt(current++);
     }
 
-    private char lookAhead() {
+    private char peekCharacter() {
         if (current >= source.length()) {
             return '\0';
         }
@@ -153,29 +152,29 @@ public class Scanner {
 
     private Token hexNumber() {
         start++; // Consume '$' character.
-        while (isHexDigit(lookAhead())) { // TODO error if more than 2 digits
-            nextChar();
+        while (isHexDigit(peekCharacter())) { // TODO error if more than 2 digits
+            nextCharacter();
         }
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
     }
 
     private Token number() {
-        while (isDigit(lookAhead())) { // TODO error if more than 3 digits
-            nextChar();
+        while (isDigit(peekCharacter())) { // TODO error if more than 3 digits
+            nextCharacter();
         }
         return tokenOf(Token.TokenType.NUMBER, Double.parseDouble(currentLexeme()));
     }
 
     private Token identifier() {
-        while (isAlphanumeric(lookAhead())) {
-            nextChar();
+        while (isAlphanumeric(peekCharacter())) {
+            nextCharacter();
         }
         String lexeme = currentLexeme();
         return RESERVED_WORDS.getOrDefault(lexeme, tokenOf(Token.TokenType.IDENT, lexeme));
     }
 
     private boolean isWhitespace() {
-        return WHITESPACE_CHARS.matcher(String.valueOf(lookAhead())).matches();
+        return WHITESPACE_CHARS.matcher(String.valueOf(peekCharacter())).matches();
     }
 
     private boolean isHexDigit(char c) {
@@ -191,7 +190,7 @@ public class Scanner {
     }
 
     private boolean isAlphanumeric(char c) {
-        return WORD_CHARS.matcher(String.valueOf(c)).matches();
+        return isDigit(c) || isAlpha(c);
     }
 
     private String currentLexeme() {
