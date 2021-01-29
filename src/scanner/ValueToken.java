@@ -1,3 +1,5 @@
+package scanner;
+
 import java.util.Objects;
 
 public class ValueToken extends Token {
@@ -7,10 +9,6 @@ public class ValueToken extends Token {
     public ValueToken(TokenType type, Object value) {
         super(type);
         this.value = Objects.requireNonNull(value);
-    }
-
-    public Object getValue() {
-        return value;
     }
 
     @Override
