@@ -2,6 +2,8 @@ package scanner;
 
 import java.util.Objects;
 
+import static java.lang.Character.isWhitespace;
+
 abstract class AbstractScanner implements IScanner {
 
     static Token tokenOf(Token.TokenType type) {
@@ -22,7 +24,6 @@ abstract class AbstractScanner implements IScanner {
     @Override
     public Token getToken() {
         skipWhitespace();
-        start = current;
         switch (nextCharacter()) {
             case '\0':
                 return tokenOf(Token.TokenType.EOF);
@@ -91,11 +92,16 @@ abstract class AbstractScanner implements IScanner {
         }
     }
 
-    abstract void skipWhitespace();
-
     abstract Token scanNumber();
 
     abstract Token scanIdentifier();
+
+    void skipWhitespace() {
+        while (isWhitespace(peekCharacter())) {
+            nextCharacter();
+        }
+        start = current;
+    }
 
     char previousCharacter() {
         return source.charAt(current - 1);

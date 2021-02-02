@@ -39,13 +39,6 @@ public class PicScanner extends AbstractScanner {
     }
 
     @Override
-    void skipWhitespace() {
-        while (isWhitespace(peekCharacter())) {
-            nextCharacter();
-        }
-    }
-
-    @Override
     Token scanNumber() {
         if (previousCharacter() == '$') {
             consume(); // Do not include '$'.
