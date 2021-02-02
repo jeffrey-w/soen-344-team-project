@@ -4,6 +4,11 @@ import java.util.Objects;
 
 import static java.lang.Character.isWhitespace;
 
+/**
+ * The {@code AbstractScanner} class provides a minimal implementation of the {@code IScanner} interface. Subclasses
+ * must define methods for reading numbers and identifiers from the source file provided to this {@code AbstractScanner}
+ * upon construction.
+ */
 abstract class AbstractScanner implements IScanner {
 
     static Token tokenOf(Token.TokenType type) {

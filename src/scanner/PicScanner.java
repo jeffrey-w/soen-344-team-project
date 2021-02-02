@@ -3,8 +3,10 @@ package scanner;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.Character.isWhitespace;
-
+/**
+ * The {@code PicScanner} provides an instantiable implementation of the {@code scanner.IScanner} interface. It reads
+ * source files written in the PIC language created by Niklaus Wirth.
+ */
 public class PicScanner extends AbstractScanner {
 
     private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
@@ -34,6 +36,12 @@ public class PicScanner extends AbstractScanner {
         RESERVED_WORDS.put("MODULE", tokenOf(Token.TokenType.MODULE));
     }
 
+    /**
+     * Creates a new {@code PicScanner} to read the specified {@code source} file.
+     *
+     * @param source the source file that will be read by the returned {@code PicScanner}
+     * @throws NullPointerException if the specified {@code source} is {@code null}
+     */
     public PicScanner(String source) {
         super(source);
     }
@@ -44,7 +52,7 @@ public class PicScanner extends AbstractScanner {
             consume(); // Do not include '$'.
             return hexNumber();
         }
-        while (isDigit(peekCharacter())) {
+        while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
             nextCharacter();
         }
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme()));
@@ -63,7 +71,7 @@ public class PicScanner extends AbstractScanner {
     }
 
     private Token hexNumber() {
-        while (isHexDigit(peekCharacter())) {
+        while (isHexDigit(peekCharacter())) { // TODO error on more than 2 digits
             nextCharacter();
         }
         return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
