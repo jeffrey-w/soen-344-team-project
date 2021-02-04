@@ -49,7 +49,6 @@ public class PicScanner extends AbstractScanner {
     @Override
     Token scanNumber() {
         if (previousCharacter() == '$') {
-            consume(); // Do not include '$'.
             return hexNumber();
         }
         while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
@@ -71,6 +70,7 @@ public class PicScanner extends AbstractScanner {
     }
 
     private Token hexNumber() {
+        consume(); // Do not include '$'.
         while (isHexDigit(peekCharacter())) { // TODO error on more than 2 digits
             nextCharacter();
         }
