@@ -1,6 +1,8 @@
-import scanner.IScanner;
-import scanner.PicScanner;
-import scanner.Token;
+package main;
+
+import main.scanner.IScanner;
+import main.scanner.PicScanner;
+import main.scanner.Token;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,7 +17,7 @@ public class PICLang {
         try {
             run(args[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Usage: PICLang <filename>");
+            System.err.println("Usage: main.PICLang <filename>");
             System.exit(USAGE_ERROR);
         }
     }

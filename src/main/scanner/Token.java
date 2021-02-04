@@ -1,4 +1,4 @@
-package scanner;
+package main.scanner;
 
 /**
  * The {@code Token} enum specifies the individual syntatic elements of the PIC language. They constitute the smallest
