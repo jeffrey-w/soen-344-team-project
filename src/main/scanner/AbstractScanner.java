@@ -9,7 +9,7 @@ import static java.lang.Character.isWhitespace;
  * must define methods for reading numbers and identifiers from the source file provided to this {@code AbstractScanner}
  * upon construction.
  */
-abstract class AbstractScanner implements IScanner {
+public abstract class AbstractScanner implements IScanner {
 
     static Token tokenOf(Token.TokenType type) {
         return new Token(type);
@@ -22,7 +22,7 @@ abstract class AbstractScanner implements IScanner {
     private int start, current;
     private final String source;
 
-    AbstractScanner(String source) {
+    protected AbstractScanner(String source) {
         this.source = Objects.requireNonNull(source);
     }
 
@@ -97,9 +97,9 @@ abstract class AbstractScanner implements IScanner {
         }
     }
 
-    abstract Token scanNumber();
+    protected abstract Token scanNumber();
 
-    abstract Token scanIdentifier();
+    protected abstract Token scanIdentifier();
 
     void skipWhitespace() {
         while (isWhitespace(peekCharacter())) {

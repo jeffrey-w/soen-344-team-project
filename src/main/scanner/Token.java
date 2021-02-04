@@ -69,7 +69,7 @@ public class Token {
      * @param type the {@code TokenType} of the returned {@code Token}
      * @throws NullPointerException if the specified {@code type} is {@code null}
      */
-    Token(TokenType type) {
+    public Token(TokenType type) {
         this.type = Objects.requireNonNull(type);
     }
 
@@ -80,6 +80,14 @@ public class Token {
      */
     public TokenType getType() {
         return type;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Token)) {
+            return false;
+        }
+        return type == ((Token) obj).type;
     }
 
     @Override

@@ -47,7 +47,7 @@ public class PicScanner extends AbstractScanner {
     }
 
     @Override
-    Token scanNumber() {
+    protected Token scanNumber() {
         if (previousCharacter() == '$') {
             consume(); // Do not include '$'.
             return hexNumber();
@@ -59,7 +59,7 @@ public class PicScanner extends AbstractScanner {
     }
 
     @Override
-    Token scanIdentifier() {
+    protected Token scanIdentifier() {
         if (!isAlpha(previousCharacter())) {
             return tokenOf(Token.TokenType.NULL); // TODO error
         }
