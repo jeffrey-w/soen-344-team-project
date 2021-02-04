@@ -1,7 +1,7 @@
 package main;
 
 import main.scanner.IScanner;
-import main.scanner.PicScanner;
+import main.scanner.PICScanner;
 import main.scanner.Token;
 
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class PICLang {
     private static void run(String file) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
-            IScanner scanner = new PicScanner(new String(bytes));
+            IScanner scanner = new PICScanner(new String(bytes));
             Token token;
             while ((token = scanner.getToken()) != Token.EOF) {
                 System.out.println(token);
