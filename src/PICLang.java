@@ -25,7 +25,7 @@ public class PICLang {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
             IScanner scanner = new PicScanner(new String(bytes));
             Token token;
-            while ((token = scanner.getToken()).getType() != Token.TokenType.EOF) {
+            while ((token = scanner.getToken()) != Token.EOF) {
                 System.out.println(token);
             }
         } catch (IOException e) {

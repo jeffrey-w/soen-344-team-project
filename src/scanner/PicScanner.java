@@ -12,28 +12,28 @@ public class PicScanner extends AbstractScanner {
     private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
 
     static {
-        RESERVED_WORDS.put("BEGIN", tokenOf(Token.TokenType.BEGIN));
-        RESERVED_WORDS.put("END", tokenOf(Token.TokenType.END));
-        RESERVED_WORDS.put("INT", tokenOf(Token.TokenType.INT));
-        RESERVED_WORDS.put("SET", tokenOf(Token.TokenType.SET));
-        RESERVED_WORDS.put("BOOL", tokenOf(Token.TokenType.BOOL));
-        RESERVED_WORDS.put("OR", tokenOf(Token.TokenType.OR));
-        RESERVED_WORDS.put("INC", tokenOf(Token.TokenType.INC));
-        RESERVED_WORDS.put("DEC", tokenOf(Token.TokenType.DEC));
-        RESERVED_WORDS.put("ROL", tokenOf(Token.TokenType.ROL));
-        RESERVED_WORDS.put("ROR", tokenOf(Token.TokenType.ROR));
-        RESERVED_WORDS.put("IF", tokenOf(Token.TokenType.IF));
-        RESERVED_WORDS.put("THEN", tokenOf(Token.TokenType.THEN));
-        RESERVED_WORDS.put("ELSE", tokenOf(Token.TokenType.ELSE));
-        RESERVED_WORDS.put("ELSIF", tokenOf(Token.TokenType.ELSIF));
-        RESERVED_WORDS.put("WHILE", tokenOf(Token.TokenType.WHILE));
-        RESERVED_WORDS.put("DO", tokenOf(Token.TokenType.DO));
-        RESERVED_WORDS.put("REPEAT", tokenOf(Token.TokenType.REPEAT));
-        RESERVED_WORDS.put("UNTIL", tokenOf(Token.TokenType.UNTIL));
-        RESERVED_WORDS.put("CONST", tokenOf(Token.TokenType.CONST));
-        RESERVED_WORDS.put("PROCEDURE", tokenOf(Token.TokenType.PROCED));
-        RESERVED_WORDS.put("RETURN", tokenOf(Token.TokenType.RETURN));
-        RESERVED_WORDS.put("MODULE", tokenOf(Token.TokenType.MODULE));
+        RESERVED_WORDS.put("BEGIN", Token.BEGIN);
+        RESERVED_WORDS.put("END", Token.END);
+        RESERVED_WORDS.put("INT", Token.INT);
+        RESERVED_WORDS.put("SET", Token.SET);
+        RESERVED_WORDS.put("BOOL", Token.BOOL);
+        RESERVED_WORDS.put("OR", Token.OR);
+        RESERVED_WORDS.put("INC", Token.INC);
+        RESERVED_WORDS.put("DEC", Token.DEC);
+        RESERVED_WORDS.put("ROL", Token.ROL);
+        RESERVED_WORDS.put("ROR", Token.ROR);
+        RESERVED_WORDS.put("IF", Token.IF);
+        RESERVED_WORDS.put("THEN", Token.THEN);
+        RESERVED_WORDS.put("ELSE", Token.ELSE);
+        RESERVED_WORDS.put("ELSIF", Token.ELSIF);
+        RESERVED_WORDS.put("WHILE", Token.WHILE);
+        RESERVED_WORDS.put("DO", Token.DO);
+        RESERVED_WORDS.put("REPEAT", Token.REPEAT);
+        RESERVED_WORDS.put("UNTIL", Token.UNTIL);
+        RESERVED_WORDS.put("CONST", Token.CONST);
+        RESERVED_WORDS.put("PROCEDURE", Token.PROCED);
+        RESERVED_WORDS.put("RETURN", Token.RETURN);
+        RESERVED_WORDS.put("MODULE", Token.MODULE);
     }
 
     /**
@@ -55,26 +55,26 @@ public class PicScanner extends AbstractScanner {
         while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
             nextCharacter();
         }
-        return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme()));
+        return Token.NUMBER;
     }
 
     @Override
     Token scanIdentifier() {
         if (!isAlpha(previousCharacter())) {
-            return tokenOf(Token.TokenType.NULL); // TODO error
+            return Token.NULL; // TODO error
         }
         while (isAlphanumeric(peekCharacter())) {
             nextCharacter();
         }
         String lexeme = currentLexeme();
-        return RESERVED_WORDS.getOrDefault(lexeme, tokenOf(Token.TokenType.IDENT, lexeme));
+        return RESERVED_WORDS.getOrDefault(lexeme, Token.IDENT);
     }
 
     private Token hexNumber() {
         while (isHexDigit(peekCharacter())) { // TODO error on more than 2 digits
             nextCharacter();
         }
-        return tokenOf(Token.TokenType.NUMBER, Integer.parseInt(currentLexeme(), 0x10));
+        return Token.NUMBER;
     }
 
     private boolean isHexDigit(char character) {

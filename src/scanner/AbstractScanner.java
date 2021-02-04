@@ -11,14 +11,6 @@ import static java.lang.Character.isWhitespace;
  */
 abstract class AbstractScanner implements IScanner {
 
-    static Token tokenOf(Token.TokenType type) {
-        return new Token(type);
-    }
-
-    static Token tokenOf(Token.TokenType type, Object value) {
-        return new ValueToken(type, value);
-    }
-
     private int start, current;
     private final String source;
 
@@ -31,55 +23,55 @@ abstract class AbstractScanner implements IScanner {
         skipWhitespace();
         switch (nextCharacter()) {
             case '\0':
-                return tokenOf(Token.TokenType.EOF);
+                return Token.EOF;
             case '*':
-                return tokenOf(Token.TokenType.AST);
+                return Token.AST;
             case '/':
-                return tokenOf(Token.TokenType.SLASH);
+                return Token.SLASH;
             case '+':
-                return tokenOf(Token.TokenType.PLUS);
+                return Token.PLUS;
             case '-':
-                return tokenOf(Token.TokenType.MINUS);
+                return Token.MINUS;
             case '~':
-                return tokenOf(Token.TokenType.NOT);
+                return Token.NOT;
             case '&':
-                return tokenOf(Token.TokenType.AND);
+                return Token.AND;
             case '=':
-                return tokenOf(Token.TokenType.EQL);
+                return Token.EQL;
             case '#':
-                return tokenOf(Token.TokenType.NEQ);
+                return Token.NEQ;
             case '>':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return tokenOf(Token.TokenType.GEQ);
+                    return Token.GEQ;
                 }
-                return tokenOf(Token.TokenType.GTR);
+                return Token.GTR;
             case '<':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return tokenOf(Token.TokenType.LEQ);
+                    return Token.LEQ;
                 }
-                return tokenOf(Token.TokenType.LSS);
+                return Token.LSS;
             case '.':
-                return tokenOf(Token.TokenType.PERIOD);
+                return Token.PERIOD;
             case ',':
-                return tokenOf(Token.TokenType.COMMA);
+                return Token.COMMA;
             case ':':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return tokenOf(Token.TokenType.BECOMES);
+                    return Token.BECOMES;
                 }
-                return tokenOf(Token.TokenType.COLON);
+                return Token.COLON;
             case '!':
-                return tokenOf(Token.TokenType.OP);
+                return Token.OP;
             case '?':
-                return tokenOf(Token.TokenType.QUERY);
+                return Token.QUERY;
             case '(':
-                return tokenOf(Token.TokenType.LPAREN);
+                return Token.LPAREN;
             case ')':
-                return tokenOf(Token.TokenType.RPAREN);
+                return Token.RPAREN;
             case ';':
-                return tokenOf(Token.TokenType.SEMICOLON);
+                return Token.SEMICOLON;
             case '$':
             case '0':
             case '1':
