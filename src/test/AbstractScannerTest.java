@@ -29,29 +29,30 @@ class AbstractScannerTest {
 
     }
 
-    static final String Source = "*/+-~&=#>>=<<=.,::=!?()";
+    static final String Source = "*/+-~&=#>>=<<=.,::=!?();";
     static final List<Token> ExpectedSequence = List.of(
-            new Token(Token.TokenType.AST),
-            new Token(Token.TokenType.SLASH),
-            new Token(Token.TokenType.PLUS),
-            new Token(Token.TokenType.MINUS),
-            new Token(Token.TokenType.NOT),
-            new Token(Token.TokenType.AND),
-            new Token(Token.TokenType.EQL),
-            new Token(Token.TokenType.NEQ),
-            new Token(Token.TokenType.GTR),
-            new Token(Token.TokenType.GEQ),
-            new Token(Token.TokenType.LSS),
-            new Token(Token.TokenType.LEQ),
-            new Token(Token.TokenType.PERIOD),
-            new Token(Token.TokenType.COMMA),
-            new Token(Token.TokenType.COLON),
-            new Token(Token.TokenType.BECOMES),
-            new Token(Token.TokenType.OP),
-            new Token(Token.TokenType.QUERY),
-            new Token(Token.TokenType.LPAREN),
-            new Token(Token.TokenType.RPAREN),
-            new Token(Token.TokenType.EOF)
+            Token.AST,
+            Token.SLASH,
+            Token.PLUS,
+            Token.MINUS,
+            Token.NOT,
+            Token.AND,
+            Token.EQL,
+            Token.NEQ,
+            Token.GTR,
+            Token.GEQ,
+            Token.LSS,
+            Token.LEQ,
+            Token.PERIOD,
+            Token.COMMA,
+            Token.COLON,
+            Token.BECOMES,
+            Token.OP,
+            Token.QUERY,
+            Token.LPAREN,
+            Token.RPAREN,
+            Token.SEMICOLON,
+            Token.EOF
     );
 
     @Test
@@ -61,4 +62,5 @@ class AbstractScannerTest {
             assertEquals(expected, scanner.getToken());
         }
     }
+
 }
