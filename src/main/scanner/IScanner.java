@@ -1,4 +1,4 @@
-package scanner;
+package main.scanner;
 
 /**
  * The {@code IScanner} interface specifies the operations for reading {@code Token}s from a source file.

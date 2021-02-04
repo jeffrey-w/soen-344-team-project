@@ -1,10 +1,10 @@
-package scanner;
+package main.scanner;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The {@code PicScanner} provides an instantiable implementation of the {@code scanner.IScanner} interface. It reads
+ * The {@code PicScanner} provides an instantiable implementation of the {@code main.scanner.IScanner} interface. It reads
  * source files written in the PIC language created by Niklaus Wirth.
  */
 public class PicScanner extends AbstractScanner {

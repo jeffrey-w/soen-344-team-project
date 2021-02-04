@@ -1,4 +1,4 @@
-package scanner;
+package main.scanner;
 
 import java.util.Objects;
 
