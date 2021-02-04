@@ -6,14 +6,19 @@ import static java.lang.Character.isWhitespace;
 
 /**
  * The {@code AbstractScanner} class provides a minimal implementation of the {@code IScanner} interface. Subclasses
- * must define methods for reading numbers and identifiers from the source file provided to this {@code AbstractScanner}
- * upon construction.
+ * must define methods for reading numbers and identifiers from a source file.
  */
 public abstract class AbstractScanner implements IScanner {
 
     private int start, current;
     private final String source;
 
+    /**
+     * Creates a new {@code AbstractScanner} to read the specified {@code source} file.
+     *
+     * @param source the source file that will be read by the returned {@code AbstractScanner}
+     * @throws NullPointerException if the specified {@code source} is {@code null}
+     */
     protected AbstractScanner(String source) {
         this.source = Objects.requireNonNull(source);
     }
@@ -89,8 +94,21 @@ public abstract class AbstractScanner implements IScanner {
         }
     }
 
+    /**
+     * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
+     * as a number.
+     *
+     * @return a {@link Token#NUMBER number} {@code Token}
+     */
     protected abstract Token scanNumber();
 
+    /**
+     * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
+     * as an identifier.
+     *
+     * @return the {@code Token} that corresponds to the reserved word scanned, or an {@link Token#IDENT identifier}
+     * {@code Token}
+     */
     protected abstract Token scanIdentifier();
 
     void skipWhitespace() {
