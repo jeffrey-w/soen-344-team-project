@@ -1,15 +1,18 @@
 package main.scanner;
 
+import main.tokens.IToken;
+
 /**
- * The {@code IScanner} interface specifies the operations for reading {@code Token}s from a source file.
+ * The {@code IScanner} interface specifies operations for reading {@code IToken}s from a source file.
  */
 public interface IScanner {
 
     /**
-     * Provides the next {@code Token} in the source file provided to this {@code IScanner}.
+     * Consumes the next characters in the source file provided to this {@code IScanner} that can be interpreted as an
+     * {@code IToken} and returns that token.
      *
-     * @return the next {@code Token} in the source file provided to this {@code IScanner}
+     * @return the next {@code IToken} in the source file provided to this {@code IScanner}
      */
-    Token getToken();
+    IToken getToken();
 
 }
