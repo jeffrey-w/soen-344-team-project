@@ -2,7 +2,7 @@ package main;
 
 import main.scanner.IScanner;
 import main.scanner.PICScanner;
-import main.scanner.Token;
+import main.tokens.IToken;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,10 +26,11 @@ public class PICLang {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
             IScanner scanner = new PICScanner(new String(bytes));
-            Token token;
-            while ((token = scanner.getToken()) != Token.EOF) {
+            IToken token;
+            do {
+                token = scanner.getToken();
                 System.out.println(token);
-            }
+            } while (!token.isEOF());
         } catch (IOException e) {
             System.err.println("Unable to open " + file + ".");
             System.exit(INVALID_ARGUMENT);
