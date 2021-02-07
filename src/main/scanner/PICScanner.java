@@ -1,45 +1,25 @@
 package main.scanner;
 
-import java.util.HashMap;
-import java.util.Map;
+import main.tables.IBranchTable;
+import main.tables.IKeywordTable;
+import main.tables.PICBranchTable;
+import main.tables.PICKeywordTable;
+import main.tokens.IToken;
+import main.tokens.PICToken;
 
 /**
- * The {@code PicScanner} provides an instantiable implementation of the {@code main.scanner.IScanner} interface. It reads
- * source files written in the PIC language created by Niklaus Wirth.
+ * The {@code PICScanner} provides an concrete implementation of the {@code IScanner} interface. It reads source files
+ * written in the PIC programming language created by Niklaus Wirth.
  */
 public class PICScanner extends AbstractScanner {
 
-    private static final Map<String, Token> RESERVED_WORDS = new HashMap<>();
-
-    static {
-        RESERVED_WORDS.put("BEGIN", Token.BEGIN);
-        RESERVED_WORDS.put("END", Token.END);
-        RESERVED_WORDS.put("INT", Token.INT);
-        RESERVED_WORDS.put("SET", Token.SET);
-        RESERVED_WORDS.put("BOOL", Token.BOOL);
-        RESERVED_WORDS.put("OR", Token.OR);
-        RESERVED_WORDS.put("INC", Token.INC);
-        RESERVED_WORDS.put("DEC", Token.DEC);
-        RESERVED_WORDS.put("ROL", Token.ROL);
-        RESERVED_WORDS.put("ROR", Token.ROR);
-        RESERVED_WORDS.put("IF", Token.IF);
-        RESERVED_WORDS.put("THEN", Token.THEN);
-        RESERVED_WORDS.put("ELSE", Token.ELSE);
-        RESERVED_WORDS.put("ELSIF", Token.ELSIF);
-        RESERVED_WORDS.put("WHILE", Token.WHILE);
-        RESERVED_WORDS.put("DO", Token.DO);
-        RESERVED_WORDS.put("REPEAT", Token.REPEAT);
-        RESERVED_WORDS.put("UNTIL", Token.UNTIL);
-        RESERVED_WORDS.put("CONST", Token.CONST);
-        RESERVED_WORDS.put("PROCEDURE", Token.PROCED);
-        RESERVED_WORDS.put("RETURN", Token.RETURN);
-        RESERVED_WORDS.put("MODULE", Token.MODULE);
-    }
+    private static final IBranchTable SYMBOLS = new PICBranchTable();
+    private static final IKeywordTable KEYWORDS = new PICKeywordTable();
 
     /**
-     * Creates a new {@code PicScanner} to read the specified {@code source} file.
+     * Creates a new {@code PICScanner} to read the specified {@code source} file.
      *
-     * @param source the source file that will be read by the returned {@code PicScanner}
+     * @param source the source file that will be read by the returned {@code PICScanner}
      * @throws NullPointerException if the specified {@code source} is {@code null}
      */
     public PICScanner(String source) {
@@ -47,34 +27,36 @@ public class PICScanner extends AbstractScanner {
     }
 
     @Override
-    protected Token scanNumber() {
-        if (previousCharacter() == '$') {
+    protected boolean isSymbol() {
+        return SYMBOLS.isSymbol(peekCharacter());
+    }
+
+    @Override
+    protected IToken scanSymbol() {
+        return SYMBOLS.tokenFor(nextCharacter(), peekCharacter(), getPosition());
+    }
+
+    @Override
+    protected boolean isNumber() {
+        return peekCharacter() == '$' || peekCharacter() >= '0' && peekCharacter() <= '9';
+    }
+
+    @Override
+    protected IToken scanNumber() {
+        if (peekCharacter() == '$') {
             return hexNumber();
         }
         while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
             nextCharacter();
         }
-        return Token.NUMBER;
+        return new PICToken(PICToken.TokenType.NUMBER, currentLexeme());
     }
 
-    @Override
-    protected Token scanIdentifier() {
-        if (!isAlpha(previousCharacter())) {
-            return Token.NULL; // TODO error
-        }
-        while (isAlphanumeric(peekCharacter())) {
+    private IToken hexNumber() {
+        do {
             nextCharacter();
-        }
-        String lexeme = currentLexeme();
-        return RESERVED_WORDS.getOrDefault(lexeme, Token.IDENT);
-    }
-
-    private Token hexNumber() {
-        consume(); // Do not include '$'.
-        while (isHexDigit(peekCharacter())) { // TODO error on more than 2 digits
-            nextCharacter();
-        }
-        return Token.NUMBER;
+        } while (isHexDigit(peekCharacter())); // TODO error on more than 2 digits
+        return new PICToken(PICToken.TokenType.NUMBER, currentLexeme());
     }
 
     private boolean isHexDigit(char character) {
@@ -87,6 +69,15 @@ public class PICScanner extends AbstractScanner {
 
     private boolean isAlpha(char character) {
         return character >= 'A' && character <= 'z';
+    }
+
+    @Override
+    protected IToken scanIdentifier() {
+        // TODO error if peekCharacter is not alpha
+        while (isAlphanumeric(peekCharacter())) {
+            nextCharacter();
+        }
+        return KEYWORDS.tokenFor(currentLexeme());
     }
 
     private boolean isAlphanumeric(char character) {
