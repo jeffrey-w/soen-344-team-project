@@ -19,11 +19,11 @@ public class PICScanner extends AbstractScanner {
     /**
      * Creates a new {@code PICScanner} to read the specified {@code source} file.
      *
-     * @param source the source file that will be read by the returned {@code PICScanner}
+     * @param sourceFileContent the source file content that will be read by the returned {@code PICScanner}
      * @throws NullPointerException if the specified {@code source} is {@code null}
      */
-    public PICScanner(String source) {
-        super(source);
+    public PICScanner(String sourceFileContent) {
+        super(sourceFileContent);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class PICScanner extends AbstractScanner {
 
     @Override
     protected boolean isNumber() {
-        return peekCharacter() == '$' || peekCharacter() >= '0' && peekCharacter() <= '9';
+        return peekCharacter() == '$' || ( peekCharacter() >= '0' && peekCharacter() <= '9' );
     }
 
     @Override
@@ -60,14 +60,14 @@ public class PICScanner extends AbstractScanner {
     }
 
     private boolean isHexDigit(char character) {
-        return isDigit(character) || character >= 'A' && character <= 'F';
+        return isDigit(character) || ( character >= 'A' && character <= 'F' );
     }
 
     private boolean isDigit(char character) {
         return character >= '0' && character <= '9';
     }
 
-    private boolean isAlpha(char character) {
+    private boolean isAlphabet(char character) {
         return character >= 'A' && character <= 'z';
     }
 
@@ -81,7 +81,7 @@ public class PICScanner extends AbstractScanner {
     }
 
     private boolean isAlphanumeric(char character) {
-        return isDigit(character) || isAlpha(character);
+        return isDigit(character) || isAlphabet(character);
     }
 
 }

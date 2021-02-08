@@ -4,13 +4,13 @@ import main.scanner.IScanner;
 import main.scanner.PICScanner;
 import main.tokens.IToken;
 import main.tokens.PICToken;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-class PICScannerTest {
+public class PICScannerTest {
 
     static final String Source = "*/+-~&=#>>=<<=.,::=!?();";
     static final List<IToken> ExpectedSequence = List.of(
@@ -39,7 +39,7 @@ class PICScannerTest {
     );
 
     @Test
-    void getToken() {
+    public void getToken() {
         IScanner scanner = new PICScanner(Source);
         for (IToken expected : ExpectedSequence) {
             assertEquals(expected, scanner.getToken());

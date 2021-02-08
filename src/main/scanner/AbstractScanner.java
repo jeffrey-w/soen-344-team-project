@@ -14,24 +14,24 @@ import static java.lang.Character.isWhitespace;
  */
 public abstract class AbstractScanner implements IScanner {
 
-    private final Position position;
-    private final String source;
+    private final Position currentPosition;
+    private final String sourceFileContent;
 
     /**
      * Creates a new {@code AbstractScanner} to read the specified {@code source} file.
      *
-     * @param source the source file that will be read by the returned {@code AbstractScanner}
+     * @param sourceFileContent the source file content that will be read by the returned {@code AbstractScanner}
      * @throws NullPointerException if the specified {@code source} is {@code null}
      */
-    protected AbstractScanner(String source) {
-        this.source = Objects.requireNonNull(source);
-        this.position = new Position();
+    protected AbstractScanner(String sourceFileContent) {
+        this.sourceFileContent = Objects.requireNonNull(sourceFileContent);
+        this.currentPosition = new Position();
     }
 
     @Override
     public IToken getToken() {
         skipWhitespace();
-        position.collapse();
+        currentPosition.collapse();
         if (isSymbol()) {
             return scanSymbol();
         } else if (isNumber()) {
@@ -88,25 +88,25 @@ public abstract class AbstractScanner implements IScanner {
     }
 
     Position getPosition() {
-        return position;
+        return currentPosition;
     }
 
     char nextCharacter() {
-        if (position.getCurrent() >= source.length()) {
+        if (currentPosition.getCurrent() >= sourceFileContent.length()) {
             return '\0';
         }
-        return source.charAt(position.advance());
+        return sourceFileContent.charAt(currentPosition.advance());
     }
 
     char peekCharacter() {
-        if (position.getCurrent() >= source.length()) {
+        if (currentPosition.getCurrent() >= sourceFileContent.length()) {
             return '\0';
         }
-        return source.charAt(position.getCurrent());
+        return sourceFileContent.charAt(currentPosition.getCurrent());
     }
 
     String currentLexeme() {
-        return source.substring(position.getStart(), position.getCurrent());
+        return sourceFileContent.substring(currentPosition.getStart(), currentPosition.getCurrent());
     }
 
 }

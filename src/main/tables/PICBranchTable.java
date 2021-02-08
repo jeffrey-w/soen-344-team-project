@@ -63,9 +63,9 @@ public class PICBranchTable implements IBranchTable {
     }
 
     @Override
-    public IToken tokenFor(char character, char lookahead, Position position) {
+    public IToken tokenFor(char character, char nextCharacter, Position position) {
         // TODO should we bother catching null pointer exceptions?
-        return SYMBOLS.get(character).apply(lookahead, position);
+        return SYMBOLS.get(character).apply(nextCharacter, position);
     }
 
 }
