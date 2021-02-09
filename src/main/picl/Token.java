@@ -5,9 +5,9 @@ import main.tokens.IToken;
 import java.util.Objects;
 
 /**
- * The {@code PICToken} class represents an {@code IToken} of the PIC programming language created by Niklaus Wirth.
+ * The {@code Token} class represents an {@code IToken} of the PICL programming language created by Niklaus Wirth.
  */
-public final class PICToken implements IToken {
+public final class Token implements IToken {
 
     /**
      * The {@code TokenType} enum specifies the individual syntatic elements of the PIC language.
@@ -20,27 +20,31 @@ public final class PICToken implements IToken {
 
     private final TokenType type;
     private final String lexeme;
+    private final Object value;
 
     /**
-     * Creates a new {@code PICToken} of the specified {@code type}.
+     * Creates a new {@code Token} of the specified {@code type}.
      *
-     * @param type the semantic value of the returned {@code PICToken}
+     * @param type the semantic value of the returned {@code Token}
      * @throws NullPointerException if the specified {@code type} is {@code null}
      */
-    public PICToken(TokenType type) {
-        this(type, null);
+    public Token(TokenType type) {
+        this(type, null, null);
     }
 
     /**
-     * Creates a new {@code PICToken} of the specified {@code type} associated with the specified {@code lexeme}.
+     * Creates a new {@code Token} of the specified {@code type}, associated with the specified {@code lexeme}, and
+     * carrying the specified {@code value}.
      *
-     * @param type the semantic value of the returned {@code PICToken}
-     * @param lexeme the character literal that the returned {@code PICToken} represents
+     * @param type the semantic value of the returned {@code Token}
+     * @param lexeme the character literal that the returned {@code Token} represents
+     * @param value the semantic content of the returned {@code Token}
      * @throws NullPointerException if the specified {@code type} is {@code null}
      */
-    public PICToken(TokenType type, String lexeme) {
+    public Token(TokenType type, String lexeme, Object value) {
         this.type = Objects.requireNonNull(type);
         this.lexeme = lexeme;
+        this.value = value;
     }
 
     @Override
@@ -59,22 +63,27 @@ public final class PICToken implements IToken {
     }
 
     @Override
+    public Object getValue() {
+        return value;
+    }
+
+    @Override
     public int hashCode() {
-        return Objects.hash(type, lexeme);
+        return Objects.hash(type, value);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof PICToken)) {
+        if (!(obj instanceof Token)) {
             return false;
         }
-        PICToken token = (PICToken) obj;
-        return type == token.type && (lexeme == null || lexeme.equals(token.lexeme));
+        Token token = (Token) obj;
+        return type == token.type && (value == null || value.equals(token.value));
     }
 
     @Override
     public String toString() {
-        return type + (lexeme == null ? "" : " " + lexeme);
+        return type + (value == null ? "" : " " + value);
     }
 
 }
