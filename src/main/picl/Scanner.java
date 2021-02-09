@@ -1,60 +1,72 @@
 package main.picl;
 
 import main.scanner.AbstractScanner;
-import main.tables.IBranchTable;
-import main.tables.IKeywordTable;
 import main.tokens.IToken;
 
-/**
- * The {@code PICScanner} provides an concrete implementation of the {@code IScanner} interface. It reads source files
- * written in the PIC programming language created by Niklaus Wirth.
- */
-public class PICScanner extends AbstractScanner {
+import java.util.HashMap;
+import java.util.Map;
 
-    private static final IBranchTable SYMBOLS = new BranchTable();
-    private static final IKeywordTable KEYWORDS = new KeywordTable();
+/**
+ * The {@code Scanner} provides an concrete implementation of the {@code IScanner} interface. It reads source files
+ * written in the PICL programming language created by Niklaus Wirth.
+ */
+public class Scanner extends AbstractScanner {
+
+    private static final Map<String, IToken> KEYWORDS = new HashMap<>();
+
+    static {
+        KEYWORDS.put("BEGIN", new Token(Token.TokenType.BEGIN));
+        KEYWORDS.put("END", new Token(Token.TokenType.END));
+        KEYWORDS.put("INT", new Token(Token.TokenType.INT));
+        KEYWORDS.put("SET", new Token(Token.TokenType.SET));
+        KEYWORDS.put("BOOL", new Token(Token.TokenType.BOOL));
+        KEYWORDS.put("OR", new Token(Token.TokenType.OR));
+        KEYWORDS.put("INC", new Token(Token.TokenType.INC));
+        KEYWORDS.put("DEC", new Token(Token.TokenType.DEC));
+        KEYWORDS.put("ROL", new Token(Token.TokenType.ROL));
+        KEYWORDS.put("ROR", new Token(Token.TokenType.ROR));
+        KEYWORDS.put("IF", new Token(Token.TokenType.IF));
+        KEYWORDS.put("THEN", new Token(Token.TokenType.THEN));
+        KEYWORDS.put("ELSE", new Token(Token.TokenType.ELSE));
+        KEYWORDS.put("ELSIF", new Token(Token.TokenType.ELSIF));
+        KEYWORDS.put("WHILE", new Token(Token.TokenType.WHILE));
+        KEYWORDS.put("DO", new Token(Token.TokenType.DO));
+        KEYWORDS.put("REPEAT", new Token(Token.TokenType.REPEAT));
+        KEYWORDS.put("UNTIL", new Token(Token.TokenType.UNTIL));
+        KEYWORDS.put("CONST", new Token(Token.TokenType.CONST));
+        KEYWORDS.put("PROCEDURE", new Token(Token.TokenType.PROCED));
+        KEYWORDS.put("RETURN", new Token(Token.TokenType.RETURN));
+        KEYWORDS.put("MODULE", new Token(Token.TokenType.MODULE));
+    }
 
     /**
-     * Creates a new {@code PICScanner} to read the specified {@code source} file.
+     * Creates a new {@code Scanner} to read the specified {@code source} file.
      *
-     * @param sourceFileContent the source file content that will be read by the returned {@code PICScanner}
+     * @param sourceFileContent the source file content that will be read by the returned {@code Scanner}
      * @throws NullPointerException if the specified {@code source} is {@code null}
      */
-    public PICScanner(String sourceFileContent) {
+    public Scanner(String sourceFileContent) {
         super(sourceFileContent);
     }
 
     @Override
-    protected boolean isSymbol() {
-        return SYMBOLS.isSymbol(peekCharacter());
-    }
-
-    @Override
-    protected IToken scanSymbol() {
-        return SYMBOLS.tokenFor(nextCharacter(), peekCharacter(), getPosition());
-    }
-
-    @Override
-    protected boolean isNumber() {
-        return peekCharacter() == '$' || ( peekCharacter() >= '0' && peekCharacter() <= '9' );
-    }
-
-    @Override
     protected IToken scanNumber() {
-        if (peekCharacter() == '$') {
+        if (previousCharacter() == '$') {
             return hexNumber();
         }
         while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
             nextCharacter();
         }
-        return new PICToken(PICToken.TokenType.NUMBER, currentLexeme());
+        String lexeme = currentLexeme();
+        return new Token(Token.TokenType.NUMBER, lexeme, Integer.parseInt(lexeme));
     }
 
     private IToken hexNumber() {
         do {
             nextCharacter();
         } while (isHexDigit(peekCharacter())); // TODO error on more than 2 digits
-        return new PICToken(PICToken.TokenType.NUMBER, currentLexeme());
+        String lexeme = currentLexeme();
+        return new Token(Token.TokenType.NUMBER, lexeme, Integer.parseInt(lexeme.substring(1), 0x10));
     }
 
     private boolean isHexDigit(char character) {
@@ -75,7 +87,8 @@ public class PICScanner extends AbstractScanner {
         while (isAlphanumeric(peekCharacter())) {
             nextCharacter();
         }
-        return KEYWORDS.tokenFor(currentLexeme());
+        String lexeme = currentLexeme();
+        return KEYWORDS.getOrDefault(lexeme, new Token(Token.TokenType.IDENT, lexeme, lexeme));
     }
 
     private boolean isAlphanumeric(char character) {
