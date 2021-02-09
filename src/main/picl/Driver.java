@@ -16,7 +16,7 @@ public class Driver {
         try {
             run(args[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Usage: main.picl.PICLang <filename>");
+            System.err.println("Usage: main.picl.Driver <filename>");
             System.exit(USAGE_ERROR);
         }
     }
@@ -24,7 +24,7 @@ public class Driver {
     private static void run(String file) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
-            IScanner scanner = new PICScanner(new String(bytes));
+            IScanner scanner = new Scanner(new String(bytes));
             IToken token;
             do {
                 token = scanner.getToken();
