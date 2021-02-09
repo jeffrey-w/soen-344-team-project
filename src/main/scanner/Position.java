@@ -8,6 +8,13 @@ public final class Position {
 
     private int start;
     private int current;
+    private int line;
+    private int column;
+
+    public Position() {
+        line = 1;
+        column = 1;
+    }
 
     /**
      * Provides the index at the beginning of this {@code Position}.
@@ -37,10 +44,51 @@ public final class Position {
     }
 
     /**
+     * TODO
+     * @return
+     */
+    public int getLine() {
+        return line;
+    }
+
+    /**
+     * TODO
+     * @return
+     */
+    public int getColumn() {
+        return column;
+    }
+
+    /**
+     * TODO
+     */
+    public void incrementLine() {
+        line++;
+    }
+
+    /**
+     * TODO
+     */
+    public void incrementColumn() {
+        column++;
+    }
+
+    /**
+     * TODO
+     */
+    public void resetColumn() {
+        column = 1;
+    }
+
+    /**
      * Induces this {@code Position} to specify a single location at the current value of its last index.
      */
     public void collapse() {
         start = current;
     }
 
+    @Override
+    public String toString() {
+        return line + ":" + column;
+    }
 }
