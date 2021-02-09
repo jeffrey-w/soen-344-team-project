@@ -27,4 +27,11 @@ public interface IToken {
      */
     String getLexeme();
 
+    /**
+     * Provides the semantic content of this {@code IToken}.
+     *
+     * @return the value associated with this {@code IToken}. // TODO rewrite this
+     */
+    Object getValue();
+
 }
