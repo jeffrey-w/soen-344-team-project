@@ -1,11 +1,9 @@
-package main.scanner;
+package main.picl;
 
+import main.scanner.AbstractScanner;
 import main.tables.IBranchTable;
 import main.tables.IKeywordTable;
-import main.tables.PICBranchTable;
-import main.tables.PICKeywordTable;
 import main.tokens.IToken;
-import main.tokens.PICToken;
 
 /**
  * The {@code PICScanner} provides an concrete implementation of the {@code IScanner} interface. It reads source files
@@ -13,8 +11,8 @@ import main.tokens.PICToken;
  */
 public class PICScanner extends AbstractScanner {
 
-    private static final IBranchTable SYMBOLS = new PICBranchTable();
-    private static final IKeywordTable KEYWORDS = new PICKeywordTable();
+    private static final IBranchTable SYMBOLS = new BranchTable();
+    private static final IKeywordTable KEYWORDS = new KeywordTable();
 
     /**
      * Creates a new {@code PICScanner} to read the specified {@code source} file.

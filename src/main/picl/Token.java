@@ -1,4 +1,6 @@
-package main.tokens;
+package main.picl;
+
+import main.tokens.IToken;
 
 import java.util.Objects;
 

@@ -1,14 +1,13 @@
-package main;
+package main.picl;
 
 import main.scanner.IScanner;
-import main.scanner.PICScanner;
 import main.tokens.IToken;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class PICLang {
+public class Driver {
 
     private static final int USAGE_ERROR = 0x10;
     private static final int INVALID_ARGUMENT = 0x20;
@@ -17,7 +16,7 @@ public class PICLang {
         try {
             run(args[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Usage: main.PICLang <filename>");
+            System.err.println("Usage: main.picl.PICLang <filename>");
             System.exit(USAGE_ERROR);
         }
     }
@@ -38,7 +37,7 @@ public class PICLang {
     }
 
     // This class is not instantiable.
-    private PICLang() {
+    private Driver() {
         // In case a maintainer tries to do so.
         throw new AssertionError();
     }

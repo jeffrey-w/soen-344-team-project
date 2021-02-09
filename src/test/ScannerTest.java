@@ -1,9 +1,9 @@
 package test;
 
 import main.scanner.IScanner;
-import main.scanner.PICScanner;
+import main.picl.PICScanner;
 import main.tokens.IToken;
-import main.tokens.PICToken;
+import main.picl.PICToken;
 import org.junit.Test;
 
 import java.util.List;
