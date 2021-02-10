@@ -1,6 +1,8 @@
 package main.picl;
 
 import main.scanner.IScanner;
+import main.scanner.ScannerFactory;
+import main.scanner.UnsupportedLanguageException;
 import main.tokens.IToken;
 
 import java.io.IOException;
@@ -24,12 +26,19 @@ public class Driver {
     private static void run(String file) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
-            IScanner scanner = new Scanner(new String(bytes));
-            IToken token;
-            do {
-                token = scanner.getToken();
-                System.out.println(token);
-            } while (!token.isEOF());
+            ScannerFactory scannerFactory = new ScannerFactory();
+            try {
+                IScanner scanner = scannerFactory.getScanner("PIC", new String(bytes));
+                IToken token;
+                do {
+                    token = scanner.getToken();
+                    System.out.println(token);
+                } while (!token.isEOF());
+            }
+            catch (UnsupportedLanguageException e)
+            {
+                System.out.println(e.getMessage());
+            }
         } catch (IOException e) {
             System.err.println("Unable to open " + file + ".");
             System.exit(INVALID_ARGUMENT);
