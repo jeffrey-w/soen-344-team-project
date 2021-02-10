@@ -1,7 +1,7 @@
 package main.picl;
 
 import main.scanner.IScanner;
-import main.scanner.ScannerFactory;
+import main.scanner.IScannerFactory;
 import main.scanner.UnsupportedLanguageException;
 import main.tokens.IToken;
 
@@ -26,9 +26,9 @@ public class Driver {
     private static void run(String file) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
-            ScannerFactory scannerFactory = new ScannerFactory();
+            IScannerFactory scannerFactory = new ScannerFactory();
             try {
-                IScanner scanner = scannerFactory.getScanner("PICL", new String(bytes));
+                IScanner scanner = scannerFactory.getScanner(new String(bytes));
                 IToken token;
                 do {
                     token = scanner.getToken();
