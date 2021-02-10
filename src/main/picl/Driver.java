@@ -28,7 +28,7 @@ public class Driver {
             byte[] bytes = Files.readAllBytes(Paths.get(file));
             ScannerFactory scannerFactory = new ScannerFactory();
             try {
-                IScanner scanner = scannerFactory.getScanner("PIC", new String(bytes));
+                IScanner scanner = scannerFactory.getScanner("PICL", new String(bytes));
                 IToken token;
                 do {
                     token = scanner.getToken();
