@@ -1,23 +1,25 @@
-package main.picl;
+package test;
 
+import main.picl.Scanner;
 import main.scanner.IScanner;
 import main.tokens.IToken;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Driver {
 
-    private static final int USAGE_ERROR = 0x10;
-    private static final int INVALID_ARGUMENT = 0x20;
+    private static final int INVALID_ARGUMENT = 0x10;
 
     public static void main(String[] args) {
-        try {
-            run(args[0]);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Usage: main.picl.Driver <filename>");
-            System.exit(USAGE_ERROR);
+        File programDirectory = new File("./programs");
+        File[] programs = programDirectory.listFiles();
+        if (programs != null) {
+            for (File program : programs) {
+                run(program.getPath());
+            }
         }
     }
 

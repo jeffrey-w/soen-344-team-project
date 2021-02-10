@@ -12,31 +12,31 @@ import java.util.Map;
  */
 public class Scanner extends AbstractScanner {
 
-    private static final Map<String, IToken> KEYWORDS = new HashMap<>();
+    private static final Map<String, Token.TokenType> KEYWORDS = new HashMap<>();
 
     static {
-        KEYWORDS.put("BEGIN", new Token(Token.TokenType.BEGIN));
-        KEYWORDS.put("END", new Token(Token.TokenType.END));
-        KEYWORDS.put("INT", new Token(Token.TokenType.INT));
-        KEYWORDS.put("SET", new Token(Token.TokenType.SET));
-        KEYWORDS.put("BOOL", new Token(Token.TokenType.BOOL));
-        KEYWORDS.put("OR", new Token(Token.TokenType.OR));
-        KEYWORDS.put("INC", new Token(Token.TokenType.INC));
-        KEYWORDS.put("DEC", new Token(Token.TokenType.DEC));
-        KEYWORDS.put("ROL", new Token(Token.TokenType.ROL));
-        KEYWORDS.put("ROR", new Token(Token.TokenType.ROR));
-        KEYWORDS.put("IF", new Token(Token.TokenType.IF));
-        KEYWORDS.put("THEN", new Token(Token.TokenType.THEN));
-        KEYWORDS.put("ELSE", new Token(Token.TokenType.ELSE));
-        KEYWORDS.put("ELSIF", new Token(Token.TokenType.ELSIF));
-        KEYWORDS.put("WHILE", new Token(Token.TokenType.WHILE));
-        KEYWORDS.put("DO", new Token(Token.TokenType.DO));
-        KEYWORDS.put("REPEAT", new Token(Token.TokenType.REPEAT));
-        KEYWORDS.put("UNTIL", new Token(Token.TokenType.UNTIL));
-        KEYWORDS.put("CONST", new Token(Token.TokenType.CONST));
-        KEYWORDS.put("PROCEDURE", new Token(Token.TokenType.PROCED));
-        KEYWORDS.put("RETURN", new Token(Token.TokenType.RETURN));
-        KEYWORDS.put("MODULE", new Token(Token.TokenType.MODULE));
+        KEYWORDS.put("BEGIN", Token.TokenType.BEGIN);
+        KEYWORDS.put("END", Token.TokenType.END);
+        KEYWORDS.put("INT", Token.TokenType.INT);
+        KEYWORDS.put("SET", Token.TokenType.SET);
+        KEYWORDS.put("BOOL", Token.TokenType.BOOL);
+        KEYWORDS.put("OR", Token.TokenType.OR);
+        KEYWORDS.put("INC", Token.TokenType.INC);
+        KEYWORDS.put("DEC", Token.TokenType.DEC);
+        KEYWORDS.put("ROL", Token.TokenType.ROL);
+        KEYWORDS.put("ROR", Token.TokenType.ROR);
+        KEYWORDS.put("IF", Token.TokenType.IF);
+        KEYWORDS.put("THEN", Token.TokenType.THEN);
+        KEYWORDS.put("ELSE", Token.TokenType.ELSE);
+        KEYWORDS.put("ELSIF", Token.TokenType.ELSIF);
+        KEYWORDS.put("WHILE", Token.TokenType.WHILE);
+        KEYWORDS.put("DO", Token.TokenType.DO);
+        KEYWORDS.put("REPEAT", Token.TokenType.REPEAT);
+        KEYWORDS.put("UNTIL", Token.TokenType.UNTIL);
+        KEYWORDS.put("CONST", Token.TokenType.CONST);
+        KEYWORDS.put("PROCEDURE", Token.TokenType.PROCEDURE);
+        KEYWORDS.put("RETURN", Token.TokenType.RETURN);
+        KEYWORDS.put("MODULE", Token.TokenType.MODULE);
     }
 
     /**
@@ -52,33 +52,28 @@ public class Scanner extends AbstractScanner {
     @Override
     protected IToken scanNumber() {
         if (previousCharacter() == '$') {
-            return hexNumber();
+            return scanHexNumber();
         }
         while (isDigit(peekCharacter())) { // TODO error on more than 3 digits
             nextCharacter();
         }
-        String lexeme = currentLexeme();
-        return new Token(Token.TokenType.NUMBER, lexeme, Integer.parseInt(lexeme));
+        return new Token(Token.TokenType.NUMBER, currentPosition(), Integer.parseInt(currentLexeme()));
     }
 
-    private IToken hexNumber() {
+    private IToken scanHexNumber() {
         do {
             nextCharacter();
         } while (isHexDigit(peekCharacter())); // TODO error on more than 2 digits
-        String lexeme = currentLexeme();
-        return new Token(Token.TokenType.NUMBER, lexeme, Integer.parseInt(lexeme.substring(1), 0x10));
+        return new Token(Token.TokenType.NUMBER, currentPosition(),
+                Integer.parseInt(currentLexeme().substring(1), 0x10));
     }
 
     private boolean isHexDigit(char character) {
-        return isDigit(character) || ( character >= 'A' && character <= 'F' );
+        return isDigit(character) || (character >= 'A' && character <= 'F');
     }
 
     private boolean isDigit(char character) {
         return character >= '0' && character <= '9';
-    }
-
-    private boolean isAlphabet(char character) {
-        return character >= 'A' && character <= 'z';
     }
 
     @Override
@@ -88,11 +83,19 @@ public class Scanner extends AbstractScanner {
             nextCharacter();
         }
         String lexeme = currentLexeme();
-        return KEYWORDS.getOrDefault(lexeme, new Token(Token.TokenType.IDENT, lexeme, lexeme));
+        if (KEYWORDS.containsKey(lexeme)) {
+            return new Token(KEYWORDS.get(lexeme), currentPosition());
+        } else {
+            return new Token(Token.TokenType.IDENTIFIER, currentPosition(), lexeme);
+        }
+    }
+
+    private boolean isAlphabetic(char character) {
+        return character >= 'A' && character <= 'z';
     }
 
     private boolean isAlphanumeric(char character) {
-        return isDigit(character) || isAlphabet(character);
+        return isDigit(character) || isAlphabetic(character);
     }
 
 }

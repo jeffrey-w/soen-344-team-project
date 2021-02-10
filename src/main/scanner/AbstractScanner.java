@@ -14,7 +14,8 @@ import static java.lang.Character.isWhitespace;
  */
 public abstract class AbstractScanner implements IScanner {
 
-    private final Position currentPosition;
+    private int startIndex, currentIndex;
+    private final Position position;
     private final String sourceFileContent;
 
     /**
@@ -25,65 +26,64 @@ public abstract class AbstractScanner implements IScanner {
      */
     protected AbstractScanner(String sourceFileContent) {
         this.sourceFileContent = Objects.requireNonNull(sourceFileContent);
-        this.currentPosition = new Position();
+        this.position = new Position();
     }
 
     @Override
     public IToken getToken() {
         skipWhitespace();
-        currentPosition.collapse();
-        System.out.println(currentPosition);
+        startIndex = currentIndex;
         switch (nextCharacter()) {
             case '\0':
-                return new Token(Token.TokenType.EOF);
+                return new Token(Token.TokenType.EOF, currentPosition());
             case '*':
-                return new Token(Token.TokenType.AST);
+                return new Token(Token.TokenType.AST, currentPosition());
             case '/':
-                return new Token(Token.TokenType.SLASH);
+                return new Token(Token.TokenType.SLASH, currentPosition());
             case '+':
-                return new Token(Token.TokenType.PLUS);
+                return new Token(Token.TokenType.PLUS, currentPosition());
             case '-':
-                return new Token(Token.TokenType.MINUS);
+                return new Token(Token.TokenType.MINUS, currentPosition());
             case '~':
-                return new Token(Token.TokenType.NOT);
+                return new Token(Token.TokenType.NOT, currentPosition());
             case '&':
-                return new Token(Token.TokenType.AND);
+                return new Token(Token.TokenType.AND, currentPosition());
             case '=':
-                return new Token(Token.TokenType.EQL);
+                return new Token(Token.TokenType.EQL, currentPosition());
             case '#':
-                return new Token(Token.TokenType.NEQ);
+                return new Token(Token.TokenType.NEQ, currentPosition());
             case '>':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return new Token(Token.TokenType.GEQ);
+                    return new Token(Token.TokenType.GEQ, currentPosition());
                 }
-                return new Token(Token.TokenType.GTR);
+                return new Token(Token.TokenType.GTR, currentPosition());
             case '<':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return new Token(Token.TokenType.LEQ);
+                    return new Token(Token.TokenType.LEQ, currentPosition());
                 }
-                return new Token(Token.TokenType.LSS);
+                return new Token(Token.TokenType.LSS, currentPosition());
             case '.':
-                return new Token(Token.TokenType.PERIOD);
+                return new Token(Token.TokenType.PERIOD, currentPosition());
             case ',':
-                return new Token(Token.TokenType.COMMA);
+                return new Token(Token.TokenType.COMMA, currentPosition());
             case ':':
                 if (peekCharacter() == '=') {
                     nextCharacter();
-                    return new Token(Token.TokenType.BECOMES);
+                    return new Token(Token.TokenType.BECOMES, currentPosition());
                 }
-                return new Token(Token.TokenType.COLON);
+                return new Token(Token.TokenType.COLON, currentPosition());
             case '!':
-                return new Token(Token.TokenType.OP);
+                return new Token(Token.TokenType.OP, currentPosition());
             case '?':
-                return new Token(Token.TokenType.QUERY);
+                return new Token(Token.TokenType.QUERY, currentPosition());
             case '(':
-                return new Token(Token.TokenType.LPAREN);
+                return new Token(Token.TokenType.LEFT_PARENTHESIS, currentPosition());
             case ')':
-                return new Token(Token.TokenType.RPAREN);
+                return new Token(Token.TokenType.RIGHT_PARENTHESIS, currentPosition());
             case ';':
-                return new Token(Token.TokenType.SEMICOLON);
+                return new Token(Token.TokenType.SEMICOLON, currentPosition());
             case '$':
             case '0':
             case '1':
@@ -117,40 +117,75 @@ public abstract class AbstractScanner implements IScanner {
      */
     protected abstract IToken scanIdentifier();
 
-    void skipWhitespace() {
+    /**
+     * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
+     * as whitespace.
+     */
+    protected void skipWhitespace() {
         while (isWhitespace(peekCharacter())) {
-            char space = nextCharacter();
-            if (space == '\n') {
-                currentPosition.incrementLine();
-                currentPosition.resetColumn();
+            if (nextCharacter() == '\n') {
+                position.incrementLine();
             }
         }
     }
 
+    /**
+     * Provides the character most recently read by this {@code AbstractScanner}.
+     *
+     * @return the character that this {@code AbstractScanner} last scanned
+     * @throws IllegalStateException if this {@code AbstractScanner} has not read any characters yet
+     */
     protected char previousCharacter() {
-        if (currentPosition.getCurrent() == 0) {
-            return ' '; // TODO return something else
+        if (currentIndex == 0) {
+            throw new IllegalStateException("This scanner has no previous character.");
         }
-        return sourceFileContent.charAt(currentPosition.getCurrent() - 1);
+        return sourceFileContent.charAt(currentIndex - 1);
     }
 
+    /**
+     * Provides the next character in the source file provided to this {@code AbstractScanner}, and advances its
+     * cursor.
+     *
+     * @return the next character in the source file provided to this {@code AbstractScanner}
+     */
     protected char nextCharacter() {
-        if (currentPosition.getCurrent() >= sourceFileContent.length()) {
+        if (currentIndex >= sourceFileContent.length()) {
             return '\0';
         }
-        currentPosition.incrementColumn();
-        return sourceFileContent.charAt(currentPosition.advance());
+        position.incrementColumn();
+        return sourceFileContent.charAt(currentIndex++);
     }
 
+    /**
+     * Provides the next character in the source file provided to this {@code AbstractScanner}, but does not advance its
+     * cursor.
+     *
+     * @return the next character in the source file provided to this {@code AbstractScanner}
+     */
     protected char peekCharacter() {
-        if (currentPosition.getCurrent() >= sourceFileContent.length()) {
+        if (currentIndex >= sourceFileContent.length()) {
             return '\0';
         }
-        return sourceFileContent.charAt(currentPosition.getCurrent());
+        return sourceFileContent.charAt(currentIndex);
     }
 
+    /**
+     * Provides the character string currently selected by this {@code AbstractScanner}.
+     *
+     * @return the word most recently read by this {@code AbstractScanner}
+     */
     protected String currentLexeme() {
-        return sourceFileContent.substring(currentPosition.getStart(), currentPosition.getCurrent());
+        return sourceFileContent.substring(startIndex, currentIndex);
+    }
+
+    /**
+     * Provides the line and column number that this {@code AbstractScanner} is at in the source file previously
+     * provided to it.
+     *
+     * @return the current {@code Position} of this {@code AbstractScanner}
+     */
+    protected Position currentPosition() {
+        return position.clone();
     }
 
 }

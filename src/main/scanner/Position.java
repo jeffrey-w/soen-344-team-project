@@ -1,94 +1,83 @@
 package main.scanner;
 
-/**
- * The {@code Position} class represents a pair of indices that together specify a location, or contiguous range of
- * locations, in a linearly traversable data structure.
- */
-public final class Position {
+import java.util.Objects;
 
-    private int start;
-    private int current;
+/**
+ * The {@code Position} class represents a pair of indices that together specify a location in a text file in terms of a
+ * line and column number.
+ */
+public final class Position implements Cloneable {
+
     private int line;
     private int column;
 
+    /**
+     * Creates a new {@code Position} at line and column 1.
+     */
     public Position() {
         line = 1;
         column = 1;
     }
 
-    /**
-     * Provides the index at the beginning of this {@code Position}.
-     *
-     * @return the first index in the range specified by this {@code Position}
-     */
-    public int getStart() {
-        return start;
+    @Override
+    public Position clone() {
+        try {
+            return (Position) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e); // This should not happen since we're cloneable
+        }
     }
 
     /**
-     * Provides the index at the end of this {@code Position}.
+     * Provides the line number that this {@code Position} is at.
      *
-     * @return the last index in the range specified by this {@code Position}
-     */
-    public int getCurrent() {
-        return current;
-    }
-
-    /**
-     * Provides the index at the end of this {@code Position} and increments it afterwards.
-     *
-     * @return the last index in the range specified by this {@code Position}
-     */
-    public int advance() {
-        return current++;
-    }
-
-    /**
-     * TODO
-     * @return
+     * @return the line number of this {@code Position}
      */
     public int getLine() {
         return line;
     }
 
     /**
-     * TODO
-     * @return
+     * Provides the column number that this {@code Position} is at.
+     *
+     * @return the column number of this {@code Position}
      */
     public int getColumn() {
         return column;
     }
 
     /**
-     * TODO
+     * Increases the line number of this {@code Position} by one, and resets the column number to one.
      */
     public void incrementLine() {
         line++;
+        column = 1;
     }
 
     /**
-     * TODO
+     * Increases the column number of this {@code Position} by one.
      */
     public void incrementColumn() {
         column++;
     }
 
-    /**
-     * TODO
-     */
-    public void resetColumn() {
-        column = 1;
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Position)) {
+            return false;
+        }
+        Position position = (Position) obj;
+        return line == position.line && column == position.column;
     }
 
-    /**
-     * Induces this {@code Position} to specify a single location at the current value of its last index.
-     */
-    public void collapse() {
-        start = current;
+    @Override
+    public int hashCode() {
+        return Objects.hash(line, column);
     }
 
     @Override
     public String toString() {
         return line + ":" + column;
     }
+
 }
