@@ -1,6 +1,5 @@
 package main.scanner;
 
-import main.picl.Token;
 import main.tokens.IToken;
 
 import java.util.Objects;
@@ -33,73 +32,38 @@ public abstract class AbstractScanner implements IScanner {
     public IToken getToken() {
         skipWhitespace();
         startIndex = currentIndex;
-        switch (nextCharacter()) {
-            case '\0':
-                return new Token(Token.TokenType.EOF, currentPosition());
-            case '*':
-                return new Token(Token.TokenType.AST, currentPosition());
-            case '/':
-                return new Token(Token.TokenType.SLASH, currentPosition());
-            case '+':
-                return new Token(Token.TokenType.PLUS, currentPosition());
-            case '-':
-                return new Token(Token.TokenType.MINUS, currentPosition());
-            case '~':
-                return new Token(Token.TokenType.NOT, currentPosition());
-            case '&':
-                return new Token(Token.TokenType.AND, currentPosition());
-            case '=':
-                return new Token(Token.TokenType.EQL, currentPosition());
-            case '#':
-                return new Token(Token.TokenType.NEQ, currentPosition());
-            case '>':
-                if (peekCharacter() == '=') {
-                    nextCharacter();
-                    return new Token(Token.TokenType.GEQ, currentPosition());
-                }
-                return new Token(Token.TokenType.GTR, currentPosition());
-            case '<':
-                if (peekCharacter() == '=') {
-                    nextCharacter();
-                    return new Token(Token.TokenType.LEQ, currentPosition());
-                }
-                return new Token(Token.TokenType.LSS, currentPosition());
-            case '.':
-                return new Token(Token.TokenType.PERIOD, currentPosition());
-            case ',':
-                return new Token(Token.TokenType.COMMA, currentPosition());
-            case ':':
-                if (peekCharacter() == '=') {
-                    nextCharacter();
-                    return new Token(Token.TokenType.BECOMES, currentPosition());
-                }
-                return new Token(Token.TokenType.COLON, currentPosition());
-            case '!':
-                return new Token(Token.TokenType.OP, currentPosition());
-            case '?':
-                return new Token(Token.TokenType.QUERY, currentPosition());
-            case '(':
-                return new Token(Token.TokenType.LEFT_PARENTHESIS, currentPosition());
-            case ')':
-                return new Token(Token.TokenType.RIGHT_PARENTHESIS, currentPosition());
-            case ';':
-                return new Token(Token.TokenType.SEMICOLON, currentPosition());
-            case '$':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                return scanNumber();
-            default:
-                return scanIdentifier();
+        if (isSymbolic()) {
+            return scanSymbol();
+        } else if (isNumeric()) {
+            return scanNumber();
+        } else {
+            return scanIdentifier();
         }
     }
+
+    /**
+     * Determines whether or not the current character in the source file provided to this {@code AbstractScanner} is a
+     * reserved symbol.
+     *
+     * @return {@code true} if the current character is a reserved symbol
+     */
+    protected abstract boolean isSymbolic();
+
+    /**
+     * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
+     * as a reserved symbol.
+     *
+     * @return an {@code IToken} corresponding to the reserved symbol represented by the consumed characters
+     */
+    protected abstract IToken scanSymbol();
+
+    /**
+     * Determines whether or not the current character in the source file provided to this {@code AbstractScanner} is a
+     * number.
+     *
+     * @return {@code true} if the current character is a number
+     */
+    protected abstract boolean isNumeric();
 
     /**
      * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
@@ -127,19 +91,6 @@ public abstract class AbstractScanner implements IScanner {
                 position.incrementLine();
             }
         }
-    }
-
-    /**
-     * Provides the character most recently read by this {@code AbstractScanner}.
-     *
-     * @return the character that this {@code AbstractScanner} last scanned
-     * @throws IllegalStateException if this {@code AbstractScanner} has not read any characters yet
-     */
-    protected char previousCharacter() {
-        if (currentIndex == 0) {
-            throw new IllegalStateException("This scanner has no previous character.");
-        }
-        return sourceFileContent.charAt(currentIndex - 1);
     }
 
     /**
