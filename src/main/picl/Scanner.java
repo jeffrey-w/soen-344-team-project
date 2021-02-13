@@ -1,10 +1,12 @@
 package main.picl;
 
 import main.scanner.AbstractScanner;
+import main.scanner.ISymbolTable;
 import main.tokens.IToken;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -13,53 +15,28 @@ import java.util.Set;
  */
 public class Scanner extends AbstractScanner {
 
-    private static final Set<Character> GRAPHEMES =
-            Set.of('*', '/', '+', '-', '~', '&', '=', '#', '>', '<', '.', ',', ':', '!', '?', '(', ')', ';', '\0');
-
-    private static final Map<String, Token.TokenType> KEYWORDS = new HashMap<>();
-
-    static {
-        KEYWORDS.put("BEGIN", Token.TokenType.BEGIN);
-        KEYWORDS.put("END", Token.TokenType.END);
-        KEYWORDS.put("INT", Token.TokenType.INT);
-        KEYWORDS.put("SET", Token.TokenType.SET);
-        KEYWORDS.put("BOOL", Token.TokenType.BOOL);
-        KEYWORDS.put("OR", Token.TokenType.OR);
-        KEYWORDS.put("INC", Token.TokenType.INC);
-        KEYWORDS.put("DEC", Token.TokenType.DEC);
-        KEYWORDS.put("ROL", Token.TokenType.ROL);
-        KEYWORDS.put("ROR", Token.TokenType.ROR);
-        KEYWORDS.put("IF", Token.TokenType.IF);
-        KEYWORDS.put("THEN", Token.TokenType.THEN);
-        KEYWORDS.put("ELSE", Token.TokenType.ELSE);
-        KEYWORDS.put("ELSIF", Token.TokenType.ELSIF);
-        KEYWORDS.put("WHILE", Token.TokenType.WHILE);
-        KEYWORDS.put("DO", Token.TokenType.DO);
-        KEYWORDS.put("REPEAT", Token.TokenType.REPEAT);
-        KEYWORDS.put("UNTIL", Token.TokenType.UNTIL);
-        KEYWORDS.put("CONST", Token.TokenType.CONST);
-        KEYWORDS.put("PROCEDURE", Token.TokenType.PROCEDURE);
-        KEYWORDS.put("RETURN", Token.TokenType.RETURN);
-        KEYWORDS.put("MODULE", Token.TokenType.MODULE);
-    }
+    private static final Set<Character> OPERATORS = new HashSet<>(
+            Arrays.asList('*', '/', '+', '-', '~', '&', '=', '#', '>', '<', '.', ',', ':', '!', '?', '(', ')', ';',
+                    '\0'));
 
     /**
      * Creates a new {@code Scanner} to read the specified {@code source} file.
      *
      * @param sourceFileContent the source file content that will be read by the returned {@code Scanner}
-     * @throws NullPointerException if the specified {@code source} is {@code null}
+     * @param keywords the reserved words accepted by the returned {@code Scanner}
+     * @throws NullPointerException if the specified {@code source} or {@code keywords} are {@code null}
      */
-    public Scanner(String sourceFileContent) {
-        super(sourceFileContent);
+    public Scanner(String sourceFileContent, ISymbolTable keywords) {
+        super(sourceFileContent, keywords);
     }
 
     @Override
-    public boolean isSymbolic() {
-        return GRAPHEMES.contains(peekCharacter());
+    public boolean isOperator() {
+        return OPERATORS.contains(peekCharacter());
     }
 
     @Override
-    public IToken scanSymbol() {
+    public IToken scanOperator() {
         switch (nextCharacter()) {
             case '\0':
                 return new Token(Token.TokenType.EOF, currentPosition());
@@ -112,7 +89,7 @@ public class Scanner extends AbstractScanner {
             case ';':
                 return new Token(Token.TokenType.SEMICOLON, currentPosition());
             default:
-                return null; // TODO
+                throw new NoSuchElementException("The current character is not an operator");
         }
     }
 
@@ -155,10 +132,11 @@ public class Scanner extends AbstractScanner {
             nextCharacter();
         }
         String lexeme = currentLexeme();
-        if (KEYWORDS.containsKey(lexeme)) {
-            return new Token(KEYWORDS.get(lexeme), currentPosition());
+        Enum<?> type = getKeywords().getTypeFor(lexeme);
+        if (type == Token.TokenType.IDENTIFIER) {
+            return new Token((Token.TokenType) type, currentPosition(), lexeme);
         } else {
-            return new Token(Token.TokenType.IDENTIFIER, currentPosition(), lexeme);
+            return new Token((Token.TokenType) type, currentPosition());
         }
     }
 

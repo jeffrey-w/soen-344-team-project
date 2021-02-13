@@ -9,31 +9,35 @@ import static java.lang.Character.isWhitespace;
 /**
  * The {@code AbstractScanner} class provides a minimal implementation of the {@code IScanner} interface. An {@code
  * AbstractScanner} reads a source file character by character and provides its representation in {@code IToken}s.
- * Subclasses must define methods for reading numbers and identifiers.
+ * Subclasses must define methods for reading operators, numbers, and identifiers.
  */
 public abstract class AbstractScanner implements IScanner {
 
     private int startIndex, currentIndex;
     private final Position position;
     private final String sourceFileContent;
+    private final ISymbolTable keywords;
 
     /**
-     * Creates a new {@code AbstractScanner} to read the specified {@code source} file.
+     * Creates a new {@code AbstractScanner} to read the specified {@code source} file. The specified {@code
+     * keywords} define the reserved words for the grammar accepted by the new {@code AbstractScanner}
      *
      * @param sourceFileContent the source file content that will be read by the returned {@code AbstractScanner}
-     * @throws NullPointerException if the specified {@code source} is {@code null}
+     * @param keywords the reserved words accepted by the returned {@code AbstractScanner}
+     * @throws NullPointerException if the specified {@code source} or {@code keywords} are {@code null}
      */
-    protected AbstractScanner(String sourceFileContent) {
-        this.sourceFileContent = Objects.requireNonNull(sourceFileContent);
+    protected AbstractScanner(String sourceFileContent, ISymbolTable keywords) {
         this.position = new Position();
+        this.sourceFileContent = Objects.requireNonNull(sourceFileContent);
+        this.keywords = Objects.requireNonNull(keywords);
     }
 
     @Override
-    public IToken getToken() {
+    public final IToken getToken() {
         skipWhitespace();
         startIndex = currentIndex;
-        if (isSymbolic()) {
-            return scanSymbol();
+        if (isOperator()) {
+            return scanOperator();
         } else if (isNumeric()) {
             return scanNumber();
         } else {
@@ -42,20 +46,22 @@ public abstract class AbstractScanner implements IScanner {
     }
 
     /**
-     * Determines whether or not the current character in the source file provided to this {@code AbstractScanner} is a
-     * reserved symbol.
+     * Determines whether or not the current character in the source file provided to this {@code AbstractScanner} is an
+     * operator.
      *
-     * @return {@code true} if the current character is a reserved symbol
+     * @return {@code true} if the current character is an operator
      */
-    protected abstract boolean isSymbolic();
+    protected abstract boolean isOperator();
 
     /**
      * Consumes the next characters in the source file provided to this {@code AbstractScanner} that can be interpreted
-     * as a reserved symbol.
+     * as an operator.
      *
-     * @return an {@code IToken} corresponding to the reserved symbol represented by the consumed characters
+     * @return an {@code IToken} corresponding to the operator represented by the consumed characters
+     * @throws java.util.NoSuchElementException if this method is called when the next characters to be consumed do not
+     * represent an operator; this can be prevented by calling {@link #isOperator()}
      */
-    protected abstract IToken scanSymbol();
+    protected abstract IToken scanOperator();
 
     /**
      * Determines whether or not the current character in the source file provided to this {@code AbstractScanner} is a
@@ -137,6 +143,15 @@ public abstract class AbstractScanner implements IScanner {
      */
     protected Position currentPosition() {
         return position.clone();
+    }
+
+    /**
+     * Provides the reserved words of the grammar accepted by this {@code AbstractScanner}.
+     *
+     * @return the reserved words accepted by this {@code AbstractScanner}
+     */
+    protected ISymbolTable getKeywords() {
+        return keywords;
     }
 
 }
