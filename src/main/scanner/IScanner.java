@@ -1,7 +1,5 @@
 package main.scanner;
 
-import main.tokens.IToken;
-
 /**
  * The {@code IScanner} interface specifies operations for reading {@code IToken}s from a source file.
  */

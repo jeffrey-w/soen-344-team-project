@@ -1,7 +1,6 @@
 package test;
 
 import main.picl.Scanner;
-import main.picl.SymbolTable;
 import main.picl.Token;
 import main.scanner.IScanner;
 import org.junit.Test;
@@ -14,7 +13,7 @@ public class ScannerTest {
 
     @Test
     public void getToken() {
-        IScanner scanner = new Scanner(SOURCE, new SymbolTable());
+        IScanner scanner = new Scanner(SOURCE);
         for (Token.TokenType expected : Token.TokenType.values()) {
             assertEquals(expected, scanner.getToken().getType());
         }

@@ -3,7 +3,7 @@ package test;
 import main.picl.ScannerFactory;
 import main.scanner.IScanner;
 import main.scanner.IScannerFactory;
-import main.tokens.IToken;
+import main.scanner.IToken;
 
 import java.io.File;
 import java.io.IOException;

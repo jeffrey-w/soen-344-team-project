@@ -1,7 +1,5 @@
 package main.scanner;
 
-import main.tokens.IToken;
-
 import java.util.Objects;
 
 import static java.lang.Character.isWhitespace;
@@ -16,20 +14,16 @@ public abstract class AbstractScanner implements IScanner {
     private int startIndex, currentIndex;
     private final Position position;
     private final String sourceFileContent;
-    private final ISymbolTable keywords;
 
     /**
-     * Creates a new {@code AbstractScanner} to read the specified {@code source} file. The specified {@code
-     * keywords} define the reserved words for the grammar accepted by the new {@code AbstractScanner}
+     * Creates a new {@code AbstractScanner} to read the specified {@code sourceFileContent}.
      *
-     * @param sourceFileContent the source file content that will be read by the returned {@code AbstractScanner}
-     * @param keywords the reserved words accepted by the returned {@code AbstractScanner}
-     * @throws NullPointerException if the specified {@code source} or {@code keywords} are {@code null}
+     * @param sourceFileContent the source file that will be read by the returned {@code AbstractScanner}
+     * @throws NullPointerException if the specified {@code sourceFileContent} is {@code null}
      */
-    protected AbstractScanner(String sourceFileContent, ISymbolTable keywords) {
+    protected AbstractScanner(String sourceFileContent) {
         this.position = new Position();
         this.sourceFileContent = Objects.requireNonNull(sourceFileContent);
-        this.keywords = Objects.requireNonNull(keywords);
     }
 
     @Override
@@ -143,15 +137,6 @@ public abstract class AbstractScanner implements IScanner {
      */
     protected Position currentPosition() {
         return position.clone();
-    }
-
-    /**
-     * Provides the reserved words of the grammar accepted by this {@code AbstractScanner}.
-     *
-     * @return the reserved words accepted by this {@code AbstractScanner}
-     */
-    protected ISymbolTable getKeywords() {
-        return keywords;
     }
 
 }

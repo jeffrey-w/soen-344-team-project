@@ -1,13 +1,9 @@
 package main.picl;
 
 import main.scanner.AbstractScanner;
-import main.scanner.ISymbolTable;
-import main.tokens.IToken;
+import main.scanner.IToken;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The {@code Scanner} provides an concrete implementation of the {@code IScanner} interface. It reads source files
@@ -19,15 +15,41 @@ public class Scanner extends AbstractScanner {
             Arrays.asList('*', '/', '+', '-', '~', '&', '=', '#', '>', '<', '.', ',', ':', '!', '?', '(', ')', ';',
                     '\0'));
 
+    private static final Map<String, Token.TokenType> KEYWORDS = new HashMap<>();
+
+    static {
+        KEYWORDS.put("BEGIN", Token.TokenType.BEGIN);
+        KEYWORDS.put("END", Token.TokenType.END);
+        KEYWORDS.put("INT", Token.TokenType.INT);
+        KEYWORDS.put("SET", Token.TokenType.SET);
+        KEYWORDS.put("BOOL", Token.TokenType.BOOL);
+        KEYWORDS.put("OR", Token.TokenType.OR);
+        KEYWORDS.put("INC", Token.TokenType.INC);
+        KEYWORDS.put("DEC", Token.TokenType.DEC);
+        KEYWORDS.put("ROL", Token.TokenType.ROL);
+        KEYWORDS.put("ROR", Token.TokenType.ROR);
+        KEYWORDS.put("IF", Token.TokenType.IF);
+        KEYWORDS.put("THEN", Token.TokenType.THEN);
+        KEYWORDS.put("ELSE", Token.TokenType.ELSE);
+        KEYWORDS.put("ELSIF", Token.TokenType.ELSIF);
+        KEYWORDS.put("WHILE", Token.TokenType.WHILE);
+        KEYWORDS.put("DO", Token.TokenType.DO);
+        KEYWORDS.put("REPEAT", Token.TokenType.REPEAT);
+        KEYWORDS.put("UNTIL", Token.TokenType.UNTIL);
+        KEYWORDS.put("CONST", Token.TokenType.CONST);
+        KEYWORDS.put("PROCEDURE", Token.TokenType.PROCEDURE);
+        KEYWORDS.put("RETURN", Token.TokenType.RETURN);
+        KEYWORDS.put("MODULE", Token.TokenType.MODULE);
+    }
+
     /**
-     * Creates a new {@code Scanner} to read the specified {@code source} file.
+     * Creates a new {@code Scanner} to read the specified {@code sourceFileContent} file.
      *
-     * @param sourceFileContent the source file content that will be read by the returned {@code Scanner}
-     * @param keywords the reserved words accepted by the returned {@code Scanner}
-     * @throws NullPointerException if the specified {@code source} or {@code keywords} are {@code null}
+     * @param sourceFileContent the source file that will be read by the returned {@code Scanner}
+     * @throws NullPointerException if the specified {@code sourceFileContent} is {@code null}
      */
-    public Scanner(String sourceFileContent, ISymbolTable keywords) {
-        super(sourceFileContent, keywords);
+    public Scanner(String sourceFileContent) {
+        super(sourceFileContent);
     }
 
     @Override
@@ -132,12 +154,7 @@ public class Scanner extends AbstractScanner {
             nextCharacter();
         }
         String lexeme = currentLexeme();
-        Enum<?> type = getKeywords().getTypeFor(lexeme);
-        if (type == Token.TokenType.IDENTIFIER) {
-            return new Token((Token.TokenType) type, currentPosition(), lexeme);
-        } else {
-            return new Token((Token.TokenType) type, currentPosition());
-        }
+        return new Token(KEYWORDS.getOrDefault(lexeme, Token.TokenType.IDENTIFIER), currentPosition(), lexeme);
     }
 
     private boolean isAlphabetic(char character) {

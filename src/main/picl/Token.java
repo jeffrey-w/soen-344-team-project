@@ -1,7 +1,7 @@
 package main.picl;
 
+import main.scanner.IToken;
 import main.scanner.Position;
-import main.tokens.IToken;
 
 import java.util.Objects;
 
@@ -11,7 +11,7 @@ import java.util.Objects;
 public final class Token implements IToken {
 
     /**
-     * The {@code TokenType} enum specifies the individual syntatic elements of the PIC language.
+     * The {@code TokenType} enum specifies the individual lexical elements of the PIC language.
      */
     public enum TokenType {
         AST, SLASH, PLUS, MINUS, NOT, AND, OR, EQL, NEQ, GEQ, LSS, LEQ, GTR, PERIOD, COMMA, COLON, OP, QUERY,
@@ -80,7 +80,8 @@ public final class Token implements IToken {
             return false;
         }
         Token token = (Token) obj;
-        return type == token.type && position.equals(token.position) && (value == null || value.equals(token.value));
+        return type == token.type && position.equals(token.position) && value == null ?
+                token.value == null : value.equals(token.value);
     }
 
     @Override
