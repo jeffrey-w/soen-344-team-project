@@ -1,6 +1,4 @@
-package main.tokens;
-
-import main.scanner.Position;
+package main.scanner;
 
 /**
  * The {@code IToken} interface specifies operations on the lexical units of a formal language. {@code IToken}s
