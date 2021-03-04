@@ -1,6 +1,6 @@
 package test;
 
-import main.picl.Token;
+import main.picl.scanner.Token;
 import main.scanner.Position;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,6 +1,6 @@
 package test;
 
-import main.picl.ScannerFactory;
+import main.picl.scanner.ScannerFactory;
 import main.scanner.IScanner;
 import main.scanner.IScannerFactory;
 import main.scanner.IToken;

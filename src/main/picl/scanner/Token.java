@@ -1,4 +1,4 @@
-package main.picl;
+package main.picl.scanner;
 
 import main.scanner.IToken;
 import main.scanner.Position;

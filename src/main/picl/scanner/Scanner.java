@@ -1,4 +1,4 @@
-package main.picl;
+package main.picl.scanner;
 
 import main.scanner.AbstractScanner;
 import main.scanner.IToken;
@@ -154,7 +154,10 @@ public class Scanner extends AbstractScanner {
             nextCharacter();
         }
         String lexeme = currentLexeme();
-        return new Token(KEYWORDS.getOrDefault(lexeme, Token.TokenType.IDENTIFIER), currentPosition(), lexeme);
+        if (KEYWORDS.containsKey(lexeme)) {
+            return new Token(KEYWORDS.get(lexeme), currentPosition(), null);
+        }
+        return new Token(Token.TokenType.IDENTIFIER, currentPosition(), lexeme);
     }
 
     private boolean isAlphabetic(char character) {

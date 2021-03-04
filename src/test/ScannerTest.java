@@ -1,7 +1,7 @@
 package test;
 
-import main.picl.Scanner;
-import main.picl.Token;
+import main.picl.scanner.Scanner;
+import main.picl.scanner.Token;
 import main.scanner.IScanner;
 import org.junit.Test;
 
