@@ -147,11 +147,9 @@ public class Parser {
         IExpr thenCondition = disjunction(), elseCondition = null;
         consume("Expect THEN after condition in IF statement.", THEN);
         IStmt thenStatements = statementSequence(), elseStatements = null;
-        List<IExpr> elses = null;
-        List<IStmt> thens = null;
+        List<IExpr> elses = new ArrayList<>();
+        List<IStmt> thens = new ArrayList<>();
         while (match(ELSIF)) {
-            elses = new ArrayList<>();
-            thens = new ArrayList<>();
             elses.add(disjunction());
             consume("Expect THEN after condition in ELSIF statement.", THEN);
             thens.add(statementSequence());
@@ -168,11 +166,9 @@ public class Parser {
         IExpr condition = disjunction();
         consume("Expect DO after condition in WHILE statement.", DO);
         IStmt statements = statementSequence();
-        List<IExpr> elses = null;
-        List<IStmt> thens = null;
+        List<IExpr> elses = new ArrayList<>();
+        List<IStmt> thens = new ArrayList<>();
         while (match(ELSIF)) {
-            elses = new ArrayList<>();
-            thens = new ArrayList<>();
             elses.add(disjunction());
             consume("Expect DO after condition in ELSIF statement", DO);
             thens.add(statementSequence());
