@@ -31,13 +31,11 @@ public final class IfStmt implements IStmt {
         System.out.print(" THEN\n");
         System.out.print("\t");
         thenStatements.interpret(environment);
-        if (elses != null) {
-            for (int i = 0; i < elses.size(); i++) {
-                System.out.print("ELSIF ");
-                elses.get(i).interpret(environment);
-                System.out.print("THEN");
-                thens.get(i).interpret(environment);
-            }
+        for (int i = 0; i < elses.size(); i++) {
+            System.out.print("ELSIF ");
+            elses.get(i).interpret(environment);
+            System.out.print("THEN");
+            thens.get(i).interpret(environment);
         }
         if (elseCondition != null) {
             System.out.print("ELSE ");
