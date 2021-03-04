@@ -188,8 +188,7 @@ public class Parser {
     }
 
     IStmt expressionStatement() {
-        IExpr expr = assignment();
-        return new ExpressionStmt(expr);
+        return new ExpressionStmt(assignment());
     }
 
     IExpr assignment() {
