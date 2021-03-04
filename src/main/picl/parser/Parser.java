@@ -114,7 +114,7 @@ public class Parser {
             statements = statementSequence();
         }
         if (match(RETURN)) {
-            returnStatement = returnStatement();
+            returnStatement = expressionStatement();
         }
         consume("Expect END keyword after PROCED body.", END);
         consume("Expect identifier after END keyword in PROCED declaration.", IDENTIFIER);
@@ -185,10 +185,6 @@ public class Parser {
         }
         consume("Expect END after REPEAT statement", END);
         return new RepeatStmt(condition, statements);
-    }
-
-    IStmt returnStatement() {
-        return new ReturnStmt(assignment());
     }
 
     IStmt expressionStatement() {
