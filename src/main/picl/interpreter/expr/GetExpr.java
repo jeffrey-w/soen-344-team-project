@@ -1,6 +1,7 @@
 package main.picl.interpreter.expr;
 
 import main.picl.interpreter.Environment;
+import main.picl.interpreter.IVisitor;
 
 public final class GetExpr implements IExpr {
 
@@ -19,4 +20,16 @@ public final class GetExpr implements IExpr {
         index.interpret(environment);
     }
 
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitGetExpression(this);
+    }
+
+    public IExpr getLeft() {
+        return left;
+    }
+
+    public IExpr getIndex() {
+        return index;
+    }
 }

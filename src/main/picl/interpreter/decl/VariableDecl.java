@@ -1,12 +1,14 @@
 package main.picl.interpreter.decl;
 
 import main.picl.interpreter.Environment;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-public final class VariableDecl implements IDecl {
+public final class VariableDecl implements IDecl, Iterable<String> {
 
     private final Enum<?> type;
     private final Map<String, Integer> variables;
@@ -44,4 +46,25 @@ public final class VariableDecl implements IDecl {
         System.out.println(builder);
     }
 
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitVariableDeclaration(this);
+    }
+
+    public Enum<?> getType() {
+        return type;
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+        return variables.keySet().iterator();
+    }
+
+    public Integer get(String identifier) {
+        return variables.get(identifier);
+    }
+
+    public int size() {
+        return variables.size();
+    }
 }

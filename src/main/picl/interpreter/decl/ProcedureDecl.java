@@ -1,28 +1,34 @@
 package main.picl.interpreter.decl;
 
 import main.picl.interpreter.Environment;
+import main.picl.interpreter.IVisitor;
 import main.picl.interpreter.stmt.IStmt;
 import main.scanner.IToken;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class ProcedureDecl implements IDecl {
 
     private final String identifier;
-    private final IDecl parameter;
-    private final IToken type;
     private final List<IDecl> declarations;
-    private final IStmt statements;
-    private final IStmt returnStatement;
+    private IDecl parameter;
+    private Enum<?> returnType;
+    private IStmt statements;
+    private IStmt returnStatement;
 
-    public ProcedureDecl(IToken identifier, IDecl parameter, IToken type, List<IDecl> declarations, IStmt statements,
-            IStmt returnStatement) {
-        this.identifier = (String) identifier.getValue();
-        this.parameter = parameter;
-        this.type = type;
-        this.declarations = declarations;
-        this.statements = statements;
-        this.returnStatement = returnStatement;
+    public ProcedureDecl(IToken identifier) {
+        try {
+            this.identifier = (String) identifier.getValue();
+        } catch (ClassCastException e) {
+            throw new Error(); // TODO need picl error
+        }
+        this.declarations = new ArrayList<>();
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 
     @Override
@@ -31,8 +37,8 @@ public final class ProcedureDecl implements IDecl {
         if (parameter != null) {
             parameter.interpret(environment);
         }
-        if (type != null) {
-            System.out.print(": " + type);
+        if (returnType != null) {
+            System.out.print(": " + returnType);
         }
         System.out.println();
         for (IDecl declaration : declarations) {
@@ -47,4 +53,64 @@ public final class ProcedureDecl implements IDecl {
         System.out.print("END " + identifier + ".");
     }
 
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitProcedureDeclaration(this);
+    }
+
+    public boolean hasParameter() {
+        return parameter != null;
+    }
+
+    public IDecl getParameter() {
+        return parameter;
+    }
+
+    public boolean hasReturnType() {
+        return returnType != null;
+    }
+
+    public Enum<?> getReturnType() {
+        return returnType;
+    }
+
+    public List<IDecl> getDeclarations() {
+        return declarations;
+    }
+
+    public boolean hasStatements() {
+        return statements != null;
+    }
+
+    public IStmt getStatements() {
+        return statements;
+    }
+
+    public boolean hasReturnStatement() {
+        return returnStatement != null;
+    }
+
+    public IStmt getReturnStatement() {
+        return returnStatement;
+    }
+
+    public void addParameter(ParameterDecl parameter) {
+        this.parameter = Objects.requireNonNull(parameter);
+    }
+
+    public void addReturnType(IToken previous) {
+        this.returnType = previous.getType();
+    }
+
+    public void addDeclaration(IDecl declaration) {
+        declarations.add(Objects.requireNonNull(declaration));
+    }
+
+    public void addStatements(IStmt statements) {
+        this.statements = Objects.requireNonNull(statements);
+    }
+
+    public void addReturnStatement(IStmt returnStatement) {
+        this.returnStatement = Objects.requireNonNull(returnStatement);
+    }
 }

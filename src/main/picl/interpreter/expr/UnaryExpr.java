@@ -1,6 +1,7 @@
 package main.picl.interpreter.expr;
 
 import main.picl.interpreter.Environment;
+import main.picl.interpreter.IVisitor;
 import main.picl.scanner.Token;
 import main.scanner.IToken;
 
@@ -24,6 +25,19 @@ public final class UnaryExpr implements IExpr {
             System.out.print(operator + " ");
         }
         operand.interpret(environment);
+    }
+
+    @Override
+    public void accept(final IVisitor visitor) {
+        visitor.visitUnaryExpression(this);
+    }
+
+    public Enum<?> getOperator() {
+        return operator;
+    }
+
+    public IExpr getOperand() {
+        return operand;
     }
 
 }

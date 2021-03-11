@@ -8,9 +8,6 @@ import main.picl.scanner.Token;
 import main.scanner.IScanner;
 import main.scanner.IToken;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,52 +15,42 @@ import static main.picl.scanner.Token.TokenType.*;
 
 public class Parser {
 
-    public static void main(String[] args) {
-        try {
-            byte[] bytes = Files.readAllBytes(Paths.get("./programs/Example.mod"));
-            Parser parser = new Parser(new String(bytes));
-            IDecl module = parser.moduleDeclaration();
-            module.interpret(null);
-        } catch (IOException e) {
-            System.err.println("Unable to open file.");
-            System.exit(0x10); // TODO
-        }
-    }
-
     private final IScanner scanner;
     private IToken previous, current;
 
-    private Parser(String source) {
+    public Parser(String source) {
         scanner = new Scanner(source); // TODO use factory?
         current = scanner.getToken();
+    }
+
+    public IDecl parse() {
+        return moduleDeclaration(); // TODO check for EOF
     }
 
     IDecl moduleDeclaration() {
         consume("Expect MODULE declaration.", MODULE);
         consume("Expect identifier after MODULE keyword.", IDENTIFIER);
-        IToken identifier = previous;
+        ModuleDecl module = new ModuleDecl(previous);
         consume("Expect ';' after MODULE identifier", SEMICOLON);
-        List<IDecl> declarations = new ArrayList<>();
-        IStmt statements = null;
         if (match(CONST)) {
-            declarations.add(constantDeclaration());
+            module.addDeclaration(constantDeclaration());
         }
         if (match(INT, SET, BOOL)) {
-            declarations.add(variableDeclaration());
+            module.addDeclaration(variableDeclaration());
         }
         while (match(PROCEDURE)) {
-            declarations.add(procedureDeclaration());
+            module.addDeclaration(procedureDeclaration());
         }
         if (match(BEGIN)) {
-            statements = statementSequence();
+            module.addStatements(statementSequence());
         }
         consume("Expect END keyword after MODULE body.", END);
         consume("Expect identifier after END keyword in MODULE declaration.", IDENTIFIER);
-        if (!identifier.equals(previous.getValue())) {
+        if (!module.getIdentifier().equals(previous.getValue())) {
             // TODO throw error
         }
         consume("Expect '.' after MODULE declaration.", PERIOD);
-        return new ModuleDecl(identifier, declarations, statements);
+        return module;
     }
 
     IDecl constantDeclaration() {
@@ -92,36 +79,33 @@ public class Parser {
 
     IDecl procedureDeclaration() {
         consume("Expect identifier after PROCED keyword.", IDENTIFIER);
-        IToken identifier = previous, returnType = null;
-        FormalParameterDecl parameter = null;
-        List<IDecl> declarations = new ArrayList<>();
-        IStmt statements = null, returnStatement = null;
+        ProcedureDecl procedure = new ProcedureDecl(previous);
         if (match(LEFT_PARENTHESIS)) {
             consume("Expect variable type after '(' in formal parameter list.", INT, SET, BOOL);
             IToken type = previous;
             consume("Expect identifier after variable type in formal parameter list.", IDENTIFIER);
-            parameter = new FormalParameterDecl(type, previous);
+            procedure.addParameter(new ParameterDecl(type, previous));
             consume("Expect ')' after formal parameter list.", RIGHT_PARENTHESIS);
         }
         if (match(COLON)) {
             consume("Expect variable type after ':' in procedure header.", INT, SET, BOOL);
-            returnType = previous;
+            procedure.addReturnType(previous);
         }
         while (match(INT, SET, BOOL)) {
-            declarations.add(variableDeclaration());
+            procedure.addDeclaration(variableDeclaration());
         }
         if (match(BEGIN)) {
-            statements = statementSequence();
+            procedure.addStatements(statementSequence());
         }
         if (match(RETURN)) {
-            returnStatement = expressionStatement();
+            procedure.addReturnStatement(returnStatement());
         }
         consume("Expect END keyword after PROCED body.", END);
         consume("Expect identifier after END keyword in PROCED declaration.", IDENTIFIER);
-        if (!identifier.equals(previous.getValue())) {
+        if (!procedure.getIdentifier().equals(previous.getValue())) {
             // TODO throw error
         }
-        return new ProcedureDecl(identifier, parameter, returnType, declarations, statements, returnStatement);
+        return procedure;
     }
 
     IStmt statementSequence() {
@@ -144,37 +128,34 @@ public class Parser {
     }
 
     IStmt ifStatement() {
-        IExpr thenCondition = disjunction(), elseCondition = null;
+        IfStmt statement = new IfStmt();
+        IExpr guard = disjunction();
         consume("Expect THEN after condition in IF statement.", THEN);
-        IStmt thenStatements = statementSequence(), elseStatements = null;
-        List<IExpr> elses = new ArrayList<>();
-        List<IStmt> thens = new ArrayList<>();
+        statement.addStatement(guard, statementSequence());
         while (match(ELSIF)) {
-            elses.add(disjunction());
+            guard = disjunction();
             consume("Expect THEN after condition in ELSIF statement.", THEN);
-            thens.add(statementSequence());
+            statement.addStatement(guard, statementSequence());
         }
         if (match(ELSE)) {
-            elseCondition = disjunction();
-            elseStatements = statementSequence();
+            statement.addElse(statementSequence());
         }
         consume("Expect END after IF statement.", END);
-        return new IfStmt(thenCondition, thenStatements, elses, thens, elseCondition, elseStatements);
+        return statement;
     }
 
     IStmt whileStatement() {
-        IExpr condition = disjunction();
+        WhileStmt statement = new WhileStmt();
+        IExpr guard = disjunction();
         consume("Expect DO after condition in WHILE statement.", DO);
-        IStmt statements = statementSequence();
-        List<IExpr> elses = new ArrayList<>();
-        List<IStmt> thens = new ArrayList<>();
+        statement.addStatement(guard, statementSequence());
         while (match(ELSIF)) {
-            elses.add(disjunction());
+            guard = disjunction();
             consume("Expect DO after condition in ELSIF statement", DO);
-            thens.add(statementSequence());
+            statement.addStatement(guard, statementSequence());
         }
         consume("Expect END after WHILE statement.", END);
-        return new WhileStmt(condition, statements, elses, thens);
+        return statement;
     }
 
     IStmt repeatStmt() {
@@ -185,6 +166,10 @@ public class Parser {
         }
         consume("Expect END after REPEAT statement", END);
         return new RepeatStmt(condition, statements);
+    }
+
+    IStmt returnStatement() {
+        return new ReturnStmt(assignment());
     }
 
     IStmt expressionStatement() {
