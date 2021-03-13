@@ -1,6 +1,6 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.INode;
+import main.parser.INode;
 
 public interface IExpr extends INode {
 }

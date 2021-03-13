@@ -1,7 +1,7 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
 import main.picl.interpreter.expr.IExpr;
 
 public final class ExpressionStmt implements IStmt {
@@ -13,13 +13,8 @@ public final class ExpressionStmt implements IStmt {
     }
 
     @Override
-    public void interpret(final Environment environment) {
-        expression.interpret(environment);
-    }
-
-    @Override
     public void accept(final IVisitor visitor) {
-        visitor.visitExpressionStatement(this);
+        ((IPICLVisitor) visitor).visitExpressionStatement(this);
     }
 
     public IExpr getExpression() {

@@ -1,5 +1,6 @@
 package main.picl.interpreter;
 
+import main.parser.INode;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
@@ -12,19 +13,26 @@ import java.nio.file.Paths;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class PrettyPrinter implements IVisitor {
+public class PrettyPrinter implements IPICLVisitor {
 
     public static void main(String[] args) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get("./programs/Example.mod"));
             Parser parser = new Parser(new String(bytes));
-            IDecl module = parser.parse();
-            PrettyPrinter printer = new PrettyPrinter();
-            printer.visitModuleDeclaration((ModuleDecl) module);
+            PrettyPrinter printer = new PrettyPrinter(parser.parse());
+            printer.print();
         } catch (IOException e) {
             System.err.println("Unable to open file.");
             System.exit(0x10); // TODO
         }
+    }
+
+    public void print() {
+        visitModuleDeclaration(syntaxTree.getHead());
+    }
+
+    public PrettyPrinter(SyntaxTree syntaxTree){
+        this.syntaxTree = syntaxTree;
     }
 
     private static final Map<Token.TokenType, String> SYMBOLS = new EnumMap<>(Token.TokenType.class);
@@ -46,7 +54,7 @@ public class PrettyPrinter implements IVisitor {
     }
 
     private int scopeDepth;
-    private SyntaxTree ast;
+    private SyntaxTree syntaxTree;
 
     @Override
     public void visitModuleDeclaration(ModuleDecl declaration) {

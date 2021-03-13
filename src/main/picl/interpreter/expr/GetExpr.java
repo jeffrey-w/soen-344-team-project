@@ -1,7 +1,8 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
+
 
 public final class GetExpr implements IExpr {
 
@@ -14,15 +15,8 @@ public final class GetExpr implements IExpr {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        left.interpret(environment);
-        System.out.print(".");
-        index.interpret(environment);
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitGetExpression(this);
+        ((IPICLVisitor) visitor).visitGetExpression(this);
     }
 
     public IExpr getLeft() {

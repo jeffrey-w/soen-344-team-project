@@ -1,6 +1,6 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.INode;
+import main.parser.INode;
 
 public interface IStmt extends INode {
 }

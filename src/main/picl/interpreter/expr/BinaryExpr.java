@@ -1,8 +1,9 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
 import main.scanner.IToken;
+
 
 public final class BinaryExpr implements IExpr {
 
@@ -16,13 +17,11 @@ public final class BinaryExpr implements IExpr {
         this.operator = operator.getType();
     }
 
-    @Override
-    public void interpret(Environment environment) {
-    }
+
 
     @Override
     public void accept(final IVisitor visitor) {
-        visitor.visitBinaryExpression(this);
+        ((IPICLVisitor) visitor).visitBinaryExpression(this);
     }
 
     public IExpr getLeft() {

@@ -1,13 +1,13 @@
 package main.picl.interpreter.decl;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
-import main.picl.interpreter.stmt.IStmt;
-import main.scanner.IToken;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.stmt.IStmt;
+import main.scanner.IToken;
 
 public final class ProcedureDecl implements IDecl {
 
@@ -32,30 +32,8 @@ public final class ProcedureDecl implements IDecl {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        System.out.print("PROCED " + identifier);
-        if (parameter != null) {
-            parameter.interpret(environment);
-        }
-        if (returnType != null) {
-            System.out.print(": " + returnType);
-        }
-        System.out.println();
-        for (IDecl declaration : declarations) {
-            System.out.print("\t");
-            declaration.interpret(environment);
-        }
-        System.out.print("BEGIN\n");
-        statements.interpret(environment); // TODO can be null
-        if (returnStatement != null) {
-            returnStatement.interpret(environment);
-        }
-        System.out.print("END " + identifier + ".");
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitProcedureDeclaration(this);
+        ((IPICLVisitor) visitor).visitProcedureDeclaration(this);
     }
 
     public boolean hasParameter() {

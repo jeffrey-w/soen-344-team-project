@@ -1,5 +1,6 @@
 package main.picl.interpreter;
 
+import main.parser.IVisitor;
 import main.picl.interpreter.decl.ModuleDecl;
 import main.picl.interpreter.decl.ParameterDecl;
 import main.picl.interpreter.decl.ProcedureDecl;
@@ -7,7 +8,7 @@ import main.picl.interpreter.decl.VariableDecl;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
 
-public interface IVisitor {
+public interface IPICLVisitor extends IVisitor{
 
     void visitModuleDeclaration(ModuleDecl declaration);
     void visitVariableDeclaration(VariableDecl declaration);

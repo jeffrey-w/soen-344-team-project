@@ -1,7 +1,8 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
+
 
 public final class CallExpr implements IExpr {
 
@@ -14,18 +15,8 @@ public final class CallExpr implements IExpr {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        callee.interpret(environment);
-        if (argument != null) {
-            System.out.print("(");
-            argument.interpret(environment);
-            System.out.print(")");
-        }
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitCallExpression(this);
+        ((IPICLVisitor) visitor).visitCallExpression(this);
     }
 
     public IExpr getCallee() {

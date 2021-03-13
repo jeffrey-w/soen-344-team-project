@@ -1,7 +1,7 @@
 package main.picl.interpreter.decl;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
 import main.scanner.IToken;
 
 public final class ParameterDecl implements IDecl {
@@ -15,13 +15,8 @@ public final class ParameterDecl implements IDecl {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        System.out.print("(" + type + " " + identifier + ")");
-    }
-
-    @Override
     public void accept(final IVisitor visitor) {
-        visitor.visitParameterDeclaration(this);
+        ((IPICLVisitor) visitor).visitParameterDeclaration(this);
     }
 
     public Enum<?> getType() {

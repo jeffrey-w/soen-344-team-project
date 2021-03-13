@@ -1,6 +1,6 @@
 package main.picl.interpreter.decl;
 
-import main.picl.interpreter.INode;
+import main.parser.INode;
 
 public interface IDecl extends INode {
 }

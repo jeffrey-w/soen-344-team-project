@@ -1,4 +1,4 @@
-package main.picl.interpreter;
+package main.parser;
 
 import main.picl.interpreter.decl.IDecl;
 

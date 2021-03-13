@@ -1,10 +1,10 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
-
 import java.util.Iterator;
 import java.util.List;
+
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
 
 public final class BlockStmt implements IStmt, Iterable<IStmt> {
 
@@ -15,23 +15,8 @@ public final class BlockStmt implements IStmt, Iterable<IStmt> {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        for (IStmt statement : statements) {
-            System.out.print("\t");
-            statement.interpret(environment);
-            if (statements.size() > 1 && isExpr(statement)) {
-                System.out.print(";\n");
-            }
-        }
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitBlockStatement(this);
-    }
-
-    private boolean isExpr(IStmt statement) {
-        return statement instanceof ExpressionStmt;
+        ((IPICLVisitor) visitor).visitBlockStatement(this);
     }
 
     @Override

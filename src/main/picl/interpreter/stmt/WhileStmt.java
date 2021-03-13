@@ -1,10 +1,13 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
-import main.picl.interpreter.expr.IExpr;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
-import java.util.*;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.expr.IExpr;
 
 public final class WhileStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>> {
 
@@ -19,12 +22,8 @@ public final class WhileStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>>
     }
 
     @Override
-    public void interpret(Environment environment) {
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitWhileStatement(this);
+        ((IPICLVisitor) visitor).visitWhileStatement(this);
     }
 
     @Override

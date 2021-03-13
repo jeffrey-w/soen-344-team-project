@@ -1,8 +1,8 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
 import main.picl.interpreter.expr.IExpr;
+import main.picl.interpreter.IPICLVisitor;
 
 public final class RepeatStmt implements IStmt {
 
@@ -14,20 +14,10 @@ public final class RepeatStmt implements IStmt {
         this.statements = statements;
     }
 
-    @Override
-    public void interpret(Environment environment) {
-        System.out.println("REPEAT");
-        statements.interpret(environment); // TODO statements might be null
-        if (guard != null) {
-            System.out.print("UNTIL ");
-            guard.interpret(environment);
-        }
-        System.out.print("END");
-    }
 
     @Override
     public void accept(final IVisitor visitor) {
-        visitor.visitRepeatStatement(this);
+        ((IPICLVisitor) visitor).visitRepeatStatement(this);
     }
 
     public IStmt getStatements() {

@@ -1,7 +1,7 @@
 package main.picl.interpreter.stmt;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
 import main.picl.interpreter.expr.IExpr;
 
 import java.util.Objects;
@@ -15,13 +15,8 @@ public class ReturnStmt implements IStmt {
     }
 
     @Override
-    public void interpret(Environment environment) {
-
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitReturnStatement(this);
+        ((IPICLVisitor) visitor).visitReturnStatement(this);
     }
 
     public IExpr getExpression() {

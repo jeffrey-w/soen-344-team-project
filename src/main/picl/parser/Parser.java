@@ -1,5 +1,6 @@
 package main.picl.parser;
 
+import main.picl.interpreter.SyntaxTree;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
@@ -23,8 +24,8 @@ public class Parser {
         current = scanner.getToken();
     }
 
-    public IDecl parse() {
-        return moduleDeclaration(); // TODO check for EOF
+    public SyntaxTree parse() {
+        return new SyntaxTree((ModuleDecl) moduleDeclaration()); // TODO check for EOF
     }
 
     IDecl moduleDeclaration() {

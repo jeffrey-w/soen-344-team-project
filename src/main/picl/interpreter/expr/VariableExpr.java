@@ -1,8 +1,8 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
+import main.parser.IVisitor;
 import main.scanner.IToken;
+import main.picl.interpreter.IPICLVisitor;
 
 public final class VariableExpr implements IExpr {
 
@@ -13,13 +13,8 @@ public final class VariableExpr implements IExpr {
     }
 
     @Override
-    public void interpret(Environment environment) {
-        System.out.print(identifier.getValue());
-    }
-
-    @Override
     public void accept(IVisitor visitor) {
-        visitor.visitVariableExpression(this);
+        ((IPICLVisitor) visitor).visitVariableExpression(this);
     }
 
     public IToken getIdentifier() {

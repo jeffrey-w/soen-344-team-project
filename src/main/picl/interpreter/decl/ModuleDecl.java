@@ -1,13 +1,13 @@
 package main.picl.interpreter.decl;
 
-import main.picl.interpreter.Environment;
-import main.picl.interpreter.IVisitor;
-import main.picl.interpreter.stmt.IStmt;
-import main.scanner.IToken;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import main.parser.IVisitor;
+import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.stmt.IStmt;
+import main.scanner.IToken;
 
 public final class ModuleDecl implements IDecl {
 
@@ -48,21 +48,10 @@ public final class ModuleDecl implements IDecl {
         this.statements = Objects.requireNonNull(statements);
     }
 
-    @Override
-    public void interpret(Environment environment) {
-        System.out.print("MODULE " + identifier + ";\n");
-        for (IDecl declaration : declarations) {
-            System.out.print("\t");
-            declaration.interpret(environment);
-        }
-        System.out.print("BEGIN\n");
-        statements.interpret(environment); // TODO can be null
-        System.out.print("END " + identifier + ".");
-    }
 
     @Override
     public void accept(final IVisitor visitor) {
-        visitor.visitModuleDeclaration(this);
+        ((IPICLVisitor) visitor).visitModuleDeclaration(this);
     }
 
 }
