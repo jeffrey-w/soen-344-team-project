@@ -4,28 +4,12 @@ import main.parser.INode;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
-import main.picl.parser.Parser;
 import main.picl.scanner.Token;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.EnumMap;
 import java.util.Map;
 
 public class PrettyPrinter implements IPICLVisitor {
-
-    public static void main(String[] args) {
-        try {
-            byte[] bytes = Files.readAllBytes(Paths.get("./programs/Example.mod"));
-            Parser parser = new Parser(new String(bytes));
-            PrettyPrinter printer = new PrettyPrinter(parser.parse());
-            printer.print();
-        } catch (IOException e) {
-            System.err.println("Unable to open file.");
-            System.exit(0x10); // TODO
-        }
-    }
 
     public void print() {
         visitModuleDeclaration(syntaxTree.getHead());
