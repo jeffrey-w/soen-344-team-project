@@ -1,0 +1,10 @@
+main.errors
+main.parser
+main.picl.interpreter
+main.picl.interpreter.decl
+main.picl.interpreter.expr
+main.picl.interpreter.stmt
+main.picl.parser
+main.picl.scanner
+main.scanner
+test
