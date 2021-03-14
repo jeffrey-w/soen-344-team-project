@@ -9,18 +9,35 @@ import main.parser.IVisitor;
 import main.picl.interpreter.IPICLVisitor;
 import main.picl.interpreter.expr.IExpr;
 
+/**
+ * The type If stmt.
+ */
 public final class IfStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>> {
 
     private final Map<IExpr, IStmt> guardedStatements;
 
+    /**
+     * Instantiates a new If stmt.
+     */
     public IfStmt() {
         this.guardedStatements = new LinkedHashMap<>();
     }
 
+    /**
+     * Add statement.
+     *
+     * @param guard     the guard
+     * @param statement the statement
+     */
     public void addStatement(IExpr guard, IStmt statement) {
         guardedStatements.put(Objects.requireNonNull(guard), Objects.requireNonNull(statement));
     }
 
+    /**
+     * Add else.
+     *
+     * @param statement the statement
+     */
     public void addElse(IStmt statement) {
         guardedStatements.put(null, Objects.requireNonNull(statement));
     }

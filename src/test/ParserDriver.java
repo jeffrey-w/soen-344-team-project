@@ -7,7 +7,15 @@ import java.nio.file.Paths;
 import main.picl.interpreter.PrettyPrinter;
 import main.picl.parser.Parser;
 
+/**
+ * The type Parser driver.
+ */
 public class ParserDriver {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
         try {
             byte[] bytes = Files.readAllBytes(Paths.get("./programs/Example.mod"));

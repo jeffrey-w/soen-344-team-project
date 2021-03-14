@@ -6,10 +6,18 @@ import java.util.List;
 import main.parser.IVisitor;
 import main.picl.interpreter.IPICLVisitor;
 
+/**
+ * The type Block stmt.
+ */
 public final class BlockStmt implements IStmt, Iterable<IStmt> {
 
     private final List<IStmt> statements;
 
+    /**
+     * Instantiates a new Block stmt.
+     *
+     * @param statements the statements
+     */
     public BlockStmt(List<IStmt> statements) {
         this.statements = statements;
     }
@@ -24,6 +32,11 @@ public final class BlockStmt implements IStmt, Iterable<IStmt> {
         return statements.iterator();
     }
 
+    /**
+     * Size int.
+     *
+     * @return the int
+     */
     public int size() {
         return statements.size();
     }

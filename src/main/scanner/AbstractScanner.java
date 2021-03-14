@@ -6,7 +6,7 @@ import static java.lang.Character.isWhitespace;
 
 /**
  * The {@code AbstractScanner} class provides a minimal implementation of the {@code IScanner} interface. An {@code
- * AbstractScanner} reads a source file character by character and provides its representation in {@code IToken}s.
+ * AbstractScanner}* reads a source file character by character and provides its representation in {@code IToken}s.
  * Subclasses must define methods for reading operators, numbers, and identifiers.
  */
 public abstract class AbstractScanner implements IScanner {
@@ -52,8 +52,7 @@ public abstract class AbstractScanner implements IScanner {
      * as an operator.
      *
      * @return an {@code IToken} corresponding to the operator represented by the consumed characters
-     * @throws java.util.NoSuchElementException if this method is called when the next characters to be consumed do not
-     * represent an operator; this can be prevented by calling {@link #isOperator()}
+     * @throws java.util.NoSuchElementException if this method is called when the next characters to be consumed do not represent an operator; this can be prevented by calling {@link #isOperator()}
      */
     protected abstract IToken scanOperator();
 

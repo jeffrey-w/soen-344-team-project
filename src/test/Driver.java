@@ -10,10 +10,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * The type Driver.
+ */
 public class Driver {
 
     private static final int INVALID_ARGUMENT = 0x10;
 
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
         File programDirectory = new File("./programs");
         File[] programs = programDirectory.listFiles();

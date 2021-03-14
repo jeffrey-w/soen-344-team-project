@@ -9,14 +9,26 @@ import main.parser.IVisitor;
 import main.picl.interpreter.IPICLVisitor;
 import main.picl.interpreter.expr.IExpr;
 
+/**
+ * The type While stmt.
+ */
 public final class WhileStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>> {
 
     private final Map<IExpr, IStmt> guardedStatements;
 
+    /**
+     * Instantiates a new While stmt.
+     */
     public WhileStmt() {
         guardedStatements = new LinkedHashMap<>();
     }
 
+    /**
+     * Add statement.
+     *
+     * @param guard     the guard
+     * @param statement the statement
+     */
     public void addStatement(IExpr guard, IStmt statement) {
         guardedStatements.put(Objects.requireNonNull(guard), Objects.requireNonNull(statement));
     }

@@ -9,12 +9,23 @@ import main.picl.scanner.Token;
 import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * The type Pretty printer.
+ */
 public class PrettyPrinter implements IPICLVisitor {
 
+    /**
+     * Print.
+     */
     public void print() {
         visitModuleDeclaration(syntaxTree.getHead());
     }
 
+    /**
+     * Instantiates a new Pretty printer.
+     *
+     * @param syntaxTree the syntax tree
+     */
     public PrettyPrinter(SyntaxTree syntaxTree){
         this.syntaxTree = syntaxTree;
     }
