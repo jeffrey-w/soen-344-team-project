@@ -1,8 +1,7 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
-import main.picl.interpreter.IPICLVisitor;
 
 /**
  * The type Variable expr.
@@ -20,11 +19,6 @@ public final class VariableExpr implements IExpr {
         this.identifier = identifier;
     }
 
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitVariableExpression(this);
-    }
-
     /**
      * Gets identifier.
      *
@@ -33,4 +27,10 @@ public final class VariableExpr implements IExpr {
     public IToken getIdentifier() {
         return identifier;
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitVariableExpression(this);
+    }
+
 }

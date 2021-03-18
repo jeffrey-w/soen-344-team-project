@@ -22,7 +22,7 @@ public final class Environment {
     /**
      * Add.
      *
-     * @param identifier  the identifier
+     * @param identifier the identifier
      * @param declaration the declaration
      */
     public void add(String identifier, IDecl declaration) {

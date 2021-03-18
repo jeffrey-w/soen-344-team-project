@@ -1,7 +1,6 @@
 package main.picl.interpreter.decl;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
 
 /**
@@ -15,17 +14,12 @@ public final class ParameterDecl implements IDecl {
     /**
      * Instantiates a new Parameter decl.
      *
-     * @param token      the token
+     * @param token the token
      * @param identifier the identifier
      */
     public ParameterDecl(IToken token, IToken identifier) {
         type = token.getType(); // TODO validate token
         this.identifier = (String) identifier.getValue(); // TODO catch class cast exception
-    }
-
-    @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitParameterDeclaration(this);
     }
 
     /**
@@ -44,6 +38,11 @@ public final class ParameterDecl implements IDecl {
      */
     public String getIdentifier() {
         return identifier;
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitParameterDeclaration(this);
     }
 
 }

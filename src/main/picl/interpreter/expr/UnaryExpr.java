@@ -1,7 +1,6 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
 
 /**
@@ -16,16 +15,11 @@ public final class UnaryExpr implements IExpr {
      * Instantiates a new Unary expr.
      *
      * @param operator the operator
-     * @param operand  the operand
+     * @param operand the operand
      */
     public UnaryExpr(IToken operator, IExpr operand) {
         this.operand = operand;
         this.operator = operator.getType();
-    }
-
-    @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitUnaryExpression(this);
     }
 
     /**
@@ -44,6 +38,11 @@ public final class UnaryExpr implements IExpr {
      */
     public IExpr getOperand() {
         return operand;
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitUnaryExpression(this);
     }
 
 }

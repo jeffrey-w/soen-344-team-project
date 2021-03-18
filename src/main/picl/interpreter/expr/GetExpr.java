@@ -1,8 +1,6 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-
+import main.picl.interpreter.IVisitor;
 
 /**
  * The type Get expr.
@@ -15,17 +13,12 @@ public final class GetExpr implements IExpr {
     /**
      * Instantiates a new Get expr.
      *
-     * @param left  the left
+     * @param left the left
      * @param index the index
      */
     public GetExpr(IExpr left, IExpr index) {
         this.left = left;
         this.index = index;
-    }
-
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitGetExpression(this);
     }
 
     /**
@@ -45,4 +38,10 @@ public final class GetExpr implements IExpr {
     public IExpr getIndex() {
         return index;
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitGetExpression(this);
+    }
+
 }

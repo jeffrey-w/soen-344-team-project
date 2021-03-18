@@ -1,13 +1,12 @@
 package main.picl.interpreter.decl;
 
+import main.picl.interpreter.IVisitor;
+import main.picl.interpreter.stmt.IStmt;
+import main.scanner.IToken;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-import main.picl.interpreter.stmt.IStmt;
-import main.scanner.IToken;
 
 /**
  * The type Procedure decl.
@@ -42,11 +41,6 @@ public final class ProcedureDecl implements IDecl {
      */
     public String getIdentifier() {
         return identifier;
-    }
-
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitProcedureDeclaration(this);
     }
 
     /**
@@ -174,4 +168,10 @@ public final class ProcedureDecl implements IDecl {
     public void addReturnStatement(IStmt returnStatement) {
         this.returnStatement = Objects.requireNonNull(returnStatement);
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitProcedureDeclaration(this);
+    }
+
 }

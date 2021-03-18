@@ -3,8 +3,7 @@ package main.scanner;
 /**
  * The interface Scanner factory.
  */
-public interface IScannerFactory
-{
+public interface IScannerFactory {
     /**
      * Gets scanner.
      *

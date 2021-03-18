@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 /**
  * The type Driver.
  */
-public class Driver {
+public class ScannerDriver {
 
     private static final int INVALID_ARGUMENT = 0x10;
 
@@ -49,7 +49,7 @@ public class Driver {
     }
 
     // This class is not instantiable.
-    private Driver() {
+    private ScannerDriver() {
         // In case a maintainer tries to do so.
         throw new AssertionError();
     }

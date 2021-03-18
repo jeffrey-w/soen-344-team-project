@@ -15,7 +15,7 @@ public final class Error {
     /**
      * Instantiates a new Error.
      *
-     * @param message  the message
+     * @param message the message
      * @param position the position
      */
     public Error(String message, Position position) {
@@ -53,11 +53,6 @@ public final class Error {
         }
         Error error = (Error) obj;
         return message.equals(error.message) && position.equals(error.position);
-    }
-
-    @Override
-    public String toString() {
-        return super.toString();
     }
 
 }

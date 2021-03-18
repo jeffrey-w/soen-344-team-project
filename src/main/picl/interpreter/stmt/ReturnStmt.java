@@ -1,7 +1,6 @@
 package main.picl.interpreter.stmt;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.picl.interpreter.expr.IExpr;
 
 import java.util.Objects;
@@ -22,11 +21,6 @@ public class ReturnStmt implements IStmt {
         this.expression = Objects.requireNonNull(expression);
     }
 
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitReturnStatement(this);
-    }
-
     /**
      * Gets expression.
      *
@@ -34,6 +28,11 @@ public class ReturnStmt implements IStmt {
      */
     public IExpr getExpression() {
         return expression;
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitReturnStatement(this);
     }
 
 }

@@ -1,6 +1,6 @@
 package main.picl.interpreter;
 
-import main.parser.INode;
+import main.parser.ISyntaxTree;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
@@ -12,23 +12,7 @@ import java.util.Map;
 /**
  * The type Pretty printer.
  */
-public class PrettyPrinter implements IPICLVisitor {
-
-    /**
-     * Print.
-     */
-    public void print() {
-        visitModuleDeclaration(syntaxTree.getHead());
-    }
-
-    /**
-     * Instantiates a new Pretty printer.
-     *
-     * @param syntaxTree the syntax tree
-     */
-    public PrettyPrinter(SyntaxTree syntaxTree){
-        this.syntaxTree = syntaxTree;
-    }
+public class PrettyPrinter implements IVisitor {
 
     private static final Map<Token.TokenType, String> SYMBOLS = new EnumMap<>(Token.TokenType.class);
 
@@ -49,7 +33,23 @@ public class PrettyPrinter implements IPICLVisitor {
     }
 
     private int scopeDepth;
-    private SyntaxTree syntaxTree;
+    private final ISyntaxTree<?> syntaxTree;
+
+    /**
+     * Instantiates a new Pretty printer.
+     *
+     * @param syntaxTree the syntax tree
+     */
+    public PrettyPrinter(ISyntaxTree<?> syntaxTree) {
+        this.syntaxTree = syntaxTree;
+    }
+
+    /**
+     * Print.
+     */
+    public void print() {
+        visitModuleDeclaration((ModuleDecl) syntaxTree.getHead());
+    }
 
     @Override
     public void visitModuleDeclaration(ModuleDecl declaration) {

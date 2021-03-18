@@ -1,8 +1,7 @@
 package main.picl.interpreter.stmt;
 
-import main.parser.IVisitor;
+import main.picl.interpreter.IVisitor;
 import main.picl.interpreter.expr.IExpr;
-import main.picl.interpreter.IPICLVisitor;
 
 /**
  * The type Repeat stmt.
@@ -15,18 +14,12 @@ public final class RepeatStmt implements IStmt {
     /**
      * Instantiates a new Repeat stmt.
      *
-     * @param guard      the guard
+     * @param guard the guard
      * @param statements the statements
      */
     public RepeatStmt(IExpr guard, IStmt statements) {
         this.guard = guard;
         this.statements = statements;
-    }
-
-
-    @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitRepeatStatement(this);
     }
 
     /**
@@ -55,4 +48,10 @@ public final class RepeatStmt implements IStmt {
     public IExpr getGuard() {
         return guard;
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitRepeatStatement(this);
+    }
+
 }

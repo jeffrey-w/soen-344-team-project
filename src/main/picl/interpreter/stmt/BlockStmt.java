@@ -1,10 +1,9 @@
 package main.picl.interpreter.stmt;
 
+import main.picl.interpreter.IVisitor;
+
 import java.util.Iterator;
 import java.util.List;
-
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
 
 /**
  * The type Block stmt.
@@ -22,16 +21,6 @@ public final class BlockStmt implements IStmt, Iterable<IStmt> {
         this.statements = statements;
     }
 
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitBlockStatement(this);
-    }
-
-    @Override
-    public Iterator<IStmt> iterator() {
-        return statements.iterator();
-    }
-
     /**
      * Size int.
      *
@@ -40,4 +29,15 @@ public final class BlockStmt implements IStmt, Iterable<IStmt> {
     public int size() {
         return statements.size();
     }
+
+    @Override
+    public Iterator<IStmt> iterator() {
+        return statements.iterator();
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitBlockStatement(this);
+    }
+
 }

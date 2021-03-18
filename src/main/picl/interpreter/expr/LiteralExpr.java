@@ -1,9 +1,7 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
-
 
 /**
  * The type Literal expr.
@@ -21,11 +19,6 @@ public final class LiteralExpr implements IExpr {
         this.value = (Integer) value.getValue();
     }
 
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitLiteralExpression(this);
-    }
-
     /**
      * Gets value.
      *
@@ -34,4 +27,10 @@ public final class LiteralExpr implements IExpr {
     public Integer getValue() {
         return value;
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitLiteralExpression(this);
+    }
+
 }

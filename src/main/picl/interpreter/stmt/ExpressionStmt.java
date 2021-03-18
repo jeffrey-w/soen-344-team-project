@@ -1,7 +1,6 @@
 package main.picl.interpreter.stmt;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.picl.interpreter.expr.IExpr;
 
 /**
@@ -20,11 +19,6 @@ public final class ExpressionStmt implements IStmt {
         this.expression = expr;
     }
 
-    @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitExpressionStatement(this);
-    }
-
     /**
      * Gets expression.
      *
@@ -33,4 +27,10 @@ public final class ExpressionStmt implements IStmt {
     public IExpr getExpression() {
         return expression;
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitExpressionStatement(this);
+    }
+
 }

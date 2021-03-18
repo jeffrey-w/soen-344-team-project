@@ -1,13 +1,12 @@
 package main.picl.interpreter.decl;
 
+import main.picl.interpreter.IVisitor;
+import main.picl.interpreter.stmt.IStmt;
+import main.scanner.IToken;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-import main.picl.interpreter.stmt.IStmt;
-import main.scanner.IToken;
 
 /**
  * The type Module decl.
@@ -86,10 +85,9 @@ public final class ModuleDecl implements IDecl {
         this.statements = Objects.requireNonNull(statements);
     }
 
-
     @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitModuleDeclaration(this);
+    public void accept(IVisitor visitor) {
+        visitor.visitModuleDeclaration(this);
     }
 
 }

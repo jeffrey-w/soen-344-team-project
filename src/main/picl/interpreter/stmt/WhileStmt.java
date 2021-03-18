@@ -1,13 +1,12 @@
 package main.picl.interpreter.stmt;
 
+import main.picl.interpreter.IVisitor;
+import main.picl.interpreter.expr.IExpr;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-import main.picl.interpreter.expr.IExpr;
 
 /**
  * The type While stmt.
@@ -26,7 +25,7 @@ public final class WhileStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>>
     /**
      * Add statement.
      *
-     * @param guard     the guard
+     * @param guard the guard
      * @param statement the statement
      */
     public void addStatement(IExpr guard, IStmt statement) {
@@ -34,13 +33,13 @@ public final class WhileStmt implements IStmt, Iterable<Map.Entry<IExpr, IStmt>>
     }
 
     @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitWhileStatement(this);
+    public Iterator<Map.Entry<IExpr, IStmt>> iterator() {
+        return guardedStatements.entrySet().iterator();
     }
 
     @Override
-    public Iterator<Map.Entry<IExpr, IStmt>> iterator() {
-        return guardedStatements.entrySet().iterator();
+    public void accept(IVisitor visitor) {
+        visitor.visitWhileStatement(this);
     }
 
 }

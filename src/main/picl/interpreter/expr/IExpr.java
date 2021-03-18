@@ -1,6 +1,6 @@
 package main.picl.interpreter.expr;
 
-import main.parser.INode;
+import main.picl.interpreter.INode;
 
 /**
  * The interface Expr.

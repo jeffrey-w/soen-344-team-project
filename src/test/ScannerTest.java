@@ -15,7 +15,9 @@ public class ScannerTest {
     /**
      * The Source.
      */
-    static final String SOURCE = "*/+-~& OR =#>=<<=>.,:!?(:= x IF WHILE REPEAT INC DEC ROL ROR 1 ) THEN DO ; END ELSE ELSIF UNTIL RETURN INT SET BOOL CONST BEGIN PROCEDURE MODULE";
+    static final String SOURCE =
+            "*/+-~& OR =#>=<<=>.,:!?(:= x IF WHILE REPEAT INC DEC ROL ROR 1 ) THEN DO ; END ELSE ELSIF UNTIL RETURN "
+                    + "INT SET BOOL CONST BEGIN PROCEDURE MODULE";
 
     /**
      * Gets token.

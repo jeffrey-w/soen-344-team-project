@@ -1,8 +1,6 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-
+import main.picl.interpreter.IVisitor;
 
 /**
  * The type Call expr.
@@ -15,17 +13,12 @@ public final class CallExpr implements IExpr {
     /**
      * Instantiates a new Call expr.
      *
-     * @param callee   the callee
+     * @param callee the callee
      * @param argument the argument
      */
     public CallExpr(IExpr callee, IExpr argument) {
         this.callee = callee;
         this.argument = argument;
-    }
-
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitCallExpression(this);
     }
 
     /**
@@ -53,6 +46,11 @@ public final class CallExpr implements IExpr {
      */
     public IExpr getArgument() {
         return argument;
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitCallExpression(this);
     }
 
 }

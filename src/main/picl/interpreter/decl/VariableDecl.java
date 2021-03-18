@@ -1,12 +1,11 @@
 package main.picl.interpreter.decl;
 
+import main.picl.interpreter.IVisitor;
+import main.scanner.IToken;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
-import main.scanner.IToken;
 
 /**
  * The type Variable decl.
@@ -30,7 +29,7 @@ public final class VariableDecl implements IDecl, Iterable<String> {
      * Add.
      *
      * @param identifier the identifier
-     * @param value      the value
+     * @param value the value
      */
     public void add(IToken identifier, IToken value) {
         variables.put((String) identifier.getValue(), value == null ? null : (Integer) value.getValue());
@@ -43,12 +42,6 @@ public final class VariableDecl implements IDecl, Iterable<String> {
      */
     public boolean isConst() {
         return type == null;
-    }
-
-
-    @Override
-    public void accept(IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitVariableDeclaration(this);
     }
 
     /**
@@ -83,4 +76,10 @@ public final class VariableDecl implements IDecl, Iterable<String> {
     public int size() {
         return variables.size();
     }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitVariableDeclaration(this);
+    }
+
 }

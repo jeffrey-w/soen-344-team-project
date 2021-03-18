@@ -1,9 +1,7 @@
 package main.picl.interpreter.expr;
 
-import main.parser.IVisitor;
-import main.picl.interpreter.IPICLVisitor;
+import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
-
 
 /**
  * The type Binary expr.
@@ -17,21 +15,14 @@ public final class BinaryExpr implements IExpr {
     /**
      * Instantiates a new Binary expr.
      *
-     * @param left     the left
-     * @param right    the right
+     * @param left the left
+     * @param right the right
      * @param operator the operator
      */
     public BinaryExpr(IExpr left, IExpr right, IToken operator) {
         this.left = left;
         this.right = right;
         this.operator = operator.getType();
-    }
-
-
-
-    @Override
-    public void accept(final IVisitor visitor) {
-        ((IPICLVisitor) visitor).visitBinaryExpression(this);
     }
 
     /**
@@ -59,6 +50,11 @@ public final class BinaryExpr implements IExpr {
      */
     public Enum<?> getOperator() {
         return operator;
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitBinaryExpression(this);
     }
 
 }

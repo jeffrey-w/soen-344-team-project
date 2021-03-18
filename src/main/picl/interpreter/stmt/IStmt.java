@@ -1,6 +1,6 @@
 package main.picl.interpreter.stmt;
 
-import main.parser.INode;
+import main.picl.interpreter.INode;
 
 /**
  * The interface Stmt.

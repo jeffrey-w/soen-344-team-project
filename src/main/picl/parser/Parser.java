@@ -1,6 +1,7 @@
 package main.picl.parser;
 
-import main.picl.interpreter.SyntaxTree;
+import main.parser.IParser;
+import main.parser.ISyntaxTree;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
@@ -17,36 +18,27 @@ import static main.picl.scanner.Token.TokenType.*;
 /**
  * The type Parser.
  */
-public class Parser {
+public class Parser implements IParser {
 
     private final IScanner scanner;
     private IToken previous, current;
 
     /**
-     * Instantiates a new Parser.
+     * Instantiates a new {@code Parser} with the specified {@code source} file.
      *
-     * @param source the source
+     * @param source the file to be parsed
      */
     public Parser(String source) {
         scanner = new Scanner(source); // TODO use factory?
         current = scanner.getToken();
     }
 
-    /**
-     * Parse syntax tree.
-     *
-     * @return the syntax tree
-     */
-    public SyntaxTree parse() {
+    @Override
+    public ISyntaxTree<ModuleDecl> parse() {
         return new SyntaxTree((ModuleDecl) moduleDeclaration()); // TODO check for EOF
     }
 
-    /**
-     * Module declaration decl.
-     *
-     * @return the decl
-     */
-    IDecl moduleDeclaration() {
+    private IDecl moduleDeclaration() {
         consume("Expect MODULE declaration.", MODULE);
         consume("Expect identifier after MODULE keyword.", IDENTIFIER);
         ModuleDecl module = new ModuleDecl(previous);
@@ -65,19 +57,12 @@ public class Parser {
         }
         consume("Expect END keyword after MODULE body.", END);
         consume("Expect identifier after END keyword in MODULE declaration.", IDENTIFIER);
-        if (!module.getIdentifier().equals(previous.getValue())) {
-            // TODO throw error
-        }
+        ensureIdentifiersEqual(module.getIdentifier());
         consume("Expect '.' after MODULE declaration.", PERIOD);
         return module;
     }
 
-    /**
-     * Constant declaration decl.
-     *
-     * @return the decl
-     */
-    IDecl constantDeclaration() {
+    private IDecl constantDeclaration() {
         VariableDecl constants = new VariableDecl(null);
         do {
             consume("Expect identifier after CONST keyword.", IDENTIFIER);
@@ -91,12 +76,7 @@ public class Parser {
         return constants;
     }
 
-    /**
-     * Variable declaration decl.
-     *
-     * @return the decl
-     */
-    IDecl variableDeclaration() {
+    private IDecl variableDeclaration() {
         VariableDecl variables = new VariableDecl(previous);
         do {
             consume("Expect identifier after variable type keyword.", IDENTIFIER);
@@ -106,12 +86,7 @@ public class Parser {
         return variables;
     }
 
-    /**
-     * Procedure declaration decl.
-     *
-     * @return the decl
-     */
-    IDecl procedureDeclaration() {
+    private IDecl procedureDeclaration() {
         consume("Expect identifier after PROCED keyword.", IDENTIFIER);
         ProcedureDecl procedure = new ProcedureDecl(previous);
         if (match(LEFT_PARENTHESIS)) {
@@ -136,18 +111,18 @@ public class Parser {
         }
         consume("Expect END keyword after PROCED body.", END);
         consume("Expect identifier after END keyword in PROCED declaration.", IDENTIFIER);
-        if (!procedure.getIdentifier().equals(previous.getValue())) {
-            // TODO throw error
-        }
+        ensureIdentifiersEqual(procedure.getIdentifier());
         return procedure;
     }
 
-    /**
-     * Statement sequence stmt.
-     *
-     * @return the stmt
-     */
-    IStmt statementSequence() {
+    private void ensureIdentifiersEqual(String identifier) {
+        if (!identifier.equals(previous.getValue())) {
+            // TODO throw error
+        }
+    }
+
+
+    private IStmt statementSequence() {
         List<IStmt> statements = new ArrayList<>();
         do {
             statements.add(statement());
@@ -155,12 +130,7 @@ public class Parser {
         return new BlockStmt(statements);
     }
 
-    /**
-     * Statement stmt.
-     *
-     * @return the stmt
-     */
-    IStmt statement() {
+    private IStmt statement() {
         if (match(IF)) {
             return ifStatement();
         } else if (match(WHILE)) {
@@ -171,12 +141,7 @@ public class Parser {
         return expressionStatement();
     }
 
-    /**
-     * If statement stmt.
-     *
-     * @return the stmt
-     */
-    IStmt ifStatement() {
+    private IStmt ifStatement() {
         IfStmt statement = new IfStmt();
         IExpr guard = disjunction();
         consume("Expect THEN after condition in IF statement.", THEN);
@@ -193,12 +158,7 @@ public class Parser {
         return statement;
     }
 
-    /**
-     * While statement stmt.
-     *
-     * @return the stmt
-     */
-    IStmt whileStatement() {
+    private IStmt whileStatement() {
         WhileStmt statement = new WhileStmt();
         IExpr guard = disjunction();
         consume("Expect DO after condition in WHILE statement.", DO);
@@ -212,12 +172,7 @@ public class Parser {
         return statement;
     }
 
-    /**
-     * Repeat stmt stmt.
-     *
-     * @return the stmt
-     */
-    IStmt repeatStmt() {
+    private IStmt repeatStmt() {
         IStmt statements = statementSequence();
         IExpr condition = null;
         if (match(UNTIL)) {
@@ -227,30 +182,16 @@ public class Parser {
         return new RepeatStmt(condition, statements);
     }
 
-    /**
-     * Return statement stmt.
-     *
-     * @return the stmt
-     */
-    IStmt returnStatement() {
+    private IStmt returnStatement() {
         return new ReturnStmt(assignment());
     }
 
-    /**
-     * Expression statement stmt.
-     *
-     * @return the stmt
-     */
-    IStmt expressionStatement() {
+
+    private IStmt expressionStatement() {
         return new ExpressionStmt(assignment());
     }
 
-    /**
-     * Assignment expr.
-     *
-     * @return the expr
-     */
-    IExpr assignment() {
+    private IExpr assignment() {
         IExpr left = disjunction();
         if (match(BECOMES)) {
             IToken operator = previous;
@@ -260,12 +201,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Disjunction expr.
-     *
-     * @return the expr
-     */
-    IExpr disjunction() {
+    private IExpr disjunction() {
         IExpr left = conjunction();
         while (match(OR)) {
             IToken operator = previous;
@@ -275,12 +211,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Conjunction expr.
-     *
-     * @return the expr
-     */
-    IExpr conjunction() {
+    private IExpr conjunction() {
         IExpr left = equality();
         while (match(AND)) {
             IToken operator = previous;
@@ -290,12 +221,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Equality expr.
-     *
-     * @return the expr
-     */
-    IExpr equality() {
+    private IExpr equality() {
         IExpr left = comparison();
         while (match(EQL, NEQ)) {
             IToken operator = previous;
@@ -305,12 +231,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Comparison expr.
-     *
-     * @return the expr
-     */
-    IExpr comparison() {
+    private IExpr comparison() {
         IExpr left = addition();
         while (match(GTR, GEQ, LSS, LEQ)) {
             IToken operator = previous;
@@ -320,12 +241,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Addition expr.
-     *
-     * @return the expr
-     */
-    IExpr addition() {
+    private IExpr addition() {
         IExpr left = multiplication();
         while (match(PLUS, MINUS)) {
             IToken operator = previous;
@@ -335,12 +251,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Multiplication expr.
-     *
-     * @return the expr
-     */
-    IExpr multiplication() {
+    private IExpr multiplication() {
         IExpr left = unary();
         while (match(AST, SLASH)) {
             IToken operator = previous;
@@ -350,12 +261,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Unary expr.
-     *
-     * @return the expr
-     */
-    IExpr unary() {
+    private IExpr unary() {
         if (match(OP, NOT, INC, DEC, ROR, ROL)) {
             IToken operator = previous;
             IExpr operand = unary();
@@ -364,12 +270,7 @@ public class Parser {
         return call();
     }
 
-    /**
-     * Call expr.
-     *
-     * @return the expr
-     */
-    IExpr call() {
+    private IExpr call() {
         IExpr left = primary();
         if (match(LEFT_PARENTHESIS)) {
             IExpr argument = assignment();
@@ -381,12 +282,7 @@ public class Parser {
         return left;
     }
 
-    /**
-     * Primary expr.
-     *
-     * @return the expr
-     */
-    IExpr primary() {
+    private IExpr primary() {
         if (match(IDENTIFIER)) {
             return new VariableExpr(previous);
         } else if (match(NUMBER)) {
@@ -395,13 +291,7 @@ public class Parser {
         throw new Error(); // TODO need picl error
     }
 
-    /**
-     * Consume.
-     *
-     * @param message the message
-     * @param types   the types
-     */
-    void consume(String message, Token.TokenType... types) {
+    private void consume(String message, Token.TokenType... types) {
         for (Token.TokenType type : types) {
             if (current.getType() == type) {
                 advance();
@@ -411,13 +301,7 @@ public class Parser {
         // TODO throw error with message
     }
 
-    /**
-     * Match boolean.
-     *
-     * @param types the types
-     * @return the boolean
-     */
-    boolean match(Token.TokenType... types) {
+    private boolean match(Token.TokenType... types) {
         for (Token.TokenType type : types) {
             if (current.getType() == type) {
                 advance();
@@ -427,10 +311,7 @@ public class Parser {
         return false;
     }
 
-    /**
-     * Advance.
-     */
-    void advance() {
+    private void advance() {
         previous = current;
         current = scanner.getToken();
     }
