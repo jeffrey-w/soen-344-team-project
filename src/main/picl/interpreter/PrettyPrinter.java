@@ -33,14 +33,14 @@ public class PrettyPrinter implements IVisitor {
     }
 
     private int scopeDepth;
-    private final ISyntaxTree<?> syntaxTree;
+    private final ISyntaxTree<INode> syntaxTree;
 
     /**
      * Instantiates a new Pretty printer.
      *
      * @param syntaxTree the syntax tree
      */
-    public PrettyPrinter(ISyntaxTree<?> syntaxTree) {
+    public PrettyPrinter(ISyntaxTree<INode> syntaxTree) {
         this.syntaxTree = syntaxTree;
     }
 
@@ -48,7 +48,7 @@ public class PrettyPrinter implements IVisitor {
      * Print.
      */
     public void print() {
-        visitModuleDeclaration((ModuleDecl) syntaxTree.getHead());
+        syntaxTree.getHead().accept(this);
     }
 
     @Override

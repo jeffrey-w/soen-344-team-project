@@ -2,6 +2,7 @@ package main.picl.parser;
 
 import main.parser.IParser;
 import main.parser.ISyntaxTree;
+import main.picl.interpreter.INode;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
@@ -18,7 +19,7 @@ import static main.picl.scanner.Token.TokenType.*;
 /**
  * The type Parser.
  */
-public class Parser implements IParser {
+public class Parser implements IParser<INode> {
 
     private final IScanner scanner;
     private IToken previous, current;
@@ -34,8 +35,8 @@ public class Parser implements IParser {
     }
 
     @Override
-    public ISyntaxTree<ModuleDecl> parse() {
-        return new SyntaxTree((ModuleDecl) moduleDeclaration()); // TODO check for EOF
+    public ISyntaxTree<INode> parse() {
+        return new SyntaxTree(moduleDeclaration()); // TODO check for EOF
     }
 
     private IDecl moduleDeclaration() {
