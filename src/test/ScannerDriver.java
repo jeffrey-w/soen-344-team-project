@@ -43,7 +43,7 @@ public class ScannerDriver {
                 System.out.println(token);
             } while (!token.isEOF());
         } catch (IOException e) {
-            System.err.println("Unable to open " + file + ".");
+            System.err.println("Unable to open '" + file + "'.");
             System.exit(INVALID_ARGUMENT);
         }
     }
