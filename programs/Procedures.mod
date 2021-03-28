@@ -5,7 +5,7 @@ MODULE Procedures;
     INT cnt, n;
   BEGIN cnt := 0; n := 8;
     REPEAT
-      IF x.0 THEN INC cnt END ];
+      IF x.0 THEN INC cnt END;
       ROR x; DEC n
     UNTIL n = 0;
     RETURN cnt
