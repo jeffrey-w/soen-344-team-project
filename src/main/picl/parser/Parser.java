@@ -46,7 +46,7 @@ public class Parser implements IParser {
         if (match(CONST)) {
             module.addDeclaration(constantDeclaration());
         }
-        if (match(INT, SET, BOOL)) {
+        while (match(INT, SET, BOOL)) {
             module.addDeclaration(variableDeclaration());
         }
         while (match(PROCEDURE)) {
@@ -100,6 +100,7 @@ public class Parser implements IParser {
             consume("Expect variable type after ':' in procedure header.", INT, SET, BOOL);
             procedure.addReturnType(previous);
         }
+        consume("Expect ';' after procedure header.", SEMICOLON);
         while (match(INT, SET, BOOL)) {
             procedure.addDeclaration(variableDeclaration());
         }
@@ -112,6 +113,7 @@ public class Parser implements IParser {
         consume("Expect END keyword after PROCED body.", END);
         consume("Expect identifier after END keyword in PROCED declaration.", IDENTIFIER);
         ensureIdentifiersEqual(procedure.getIdentifier());
+        consume("Expect ';' after PROCED declaration", SEMICOLON);
         return procedure;
     }
 
@@ -126,7 +128,7 @@ public class Parser implements IParser {
         List<IStmt> statements = new ArrayList<>();
         do {
             statements.add(statement());
-        } while (match(SEMICOLON));
+        } while (match(SEMICOLON) && !(match(END) || current.getType() == RETURN));
         return new BlockStmt(statements);
     }
 
@@ -165,7 +167,7 @@ public class Parser implements IParser {
         statement.addStatement(guard, statementSequence());
         while (match(ELSIF)) {
             guard = disjunction();
-            consume("Expect DO after condition in ELSIF statement", DO);
+            consume("Expect DO after condition in ELSIF statement.", DO);
             statement.addStatement(guard, statementSequence());
         }
         consume("Expect END after WHILE statement.", END);
@@ -177,8 +179,10 @@ public class Parser implements IParser {
         IExpr condition = null;
         if (match(UNTIL)) {
             condition = disjunction();
+//            consume("Expect ';' after UNTIL condition in REPEAT statement.", SEMICOLON);
+        } else {
+            consume("Expect END after REPEAT statement without UNTIL condition.", END);
         }
-        consume("Expect END after REPEAT statement", END);
         return new RepeatStmt(condition, statements);
     }
 
@@ -262,7 +266,7 @@ public class Parser implements IParser {
     }
 
     private IExpr unary() {
-        if (match(OP, NOT, INC, DEC, ROR, ROL)) {
+        if (match(QUERY, OP, NOT, INC, DEC, ROR, ROL)) {
             IToken operator = previous;
             IExpr operand = unary();
             return new UnaryExpr(operator, operand);
@@ -274,6 +278,7 @@ public class Parser implements IParser {
         IExpr left = primary();
         if (match(LEFT_PARENTHESIS)) {
             IExpr argument = assignment();
+            consume("Expect ')' after argument list in procedure call.", RIGHT_PARENTHESIS);
             left = new CallExpr(left, argument);
         } else if (match(PERIOD)) {
             IExpr index = primary();
