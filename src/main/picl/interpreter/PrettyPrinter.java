@@ -92,9 +92,9 @@ public class PrettyPrinter implements IVisitor {
             declaration.getParameter().accept(this);
         }
         if (declaration.hasReturnType()) {
-            System.out.println(": " + declaration.getReturnType());
+            System.out.print(": " + declaration.getReturnType());
         }
-        System.out.println();
+        System.out.println(";");
         for (IDecl decl : declaration.getDeclarations()) {
             enterScope(decl);
         }
@@ -105,12 +105,12 @@ public class PrettyPrinter implements IVisitor {
         if (declaration.hasReturnStatement()) {
             enterScope(declaration.getReturnStatement());
         }
-        print("END " + declaration.getIdentifier() + ".\n");
+        print("END " + declaration.getIdentifier() + ";\n");
     }
 
     @Override
     public void visitParameterDeclaration(ParameterDecl declaration) {
-        System.out.println("(" + declaration.getType() + " " + declaration.getIdentifier() + ")");
+        System.out.print("(" + declaration.getType() + " " + declaration.getIdentifier() + ")");
     }
 
     @Override
@@ -119,6 +119,8 @@ public class PrettyPrinter implements IVisitor {
             stmt.accept(this);
             if (statement.size() > 1 && isExpr(stmt)) {
                 System.out.println(";");
+            } else {
+                System.out.println();
             }
         }
     }
@@ -132,7 +134,7 @@ public class PrettyPrinter implements IVisitor {
         int count = 0;
         for (Map.Entry<IExpr, IStmt> guardedStmt : statement) {
             if (guardedStmt.getKey() == null) {
-                print("ELSE ");
+                print("ELSE\n");
             } else {
                 if (++count > 1) {
                     print("ELSIF ");
@@ -144,8 +146,7 @@ public class PrettyPrinter implements IVisitor {
             }
             enterScope(guardedStmt.getValue());
         }
-        System.out.println();
-        print("END\n");
+        print("END");
     }
 
     @Override
@@ -161,20 +162,20 @@ public class PrettyPrinter implements IVisitor {
             System.out.println(" DO");
             enterScope(guardedStmt.getValue());
         }
-        System.out.println();
-        print("END\n");
+        print("END");
     }
 
     @Override
     public void visitRepeatStatement(RepeatStmt statement) {
-        System.out.println("REPEAT");
+        print("REPEAT\n");
         enterScope(statement.getStatements());
         if (statement.hasGuard()) {
-            System.out.print("UNTIL ");
+            print("UNTIL ");
             statement.getGuard().accept(this);
+            System.out.print(";");
+        } else {
+            print("END");
         }
-        System.out.println();
-        print("END\n");
     }
 
     @Override
@@ -200,7 +201,9 @@ public class PrettyPrinter implements IVisitor {
     @Override
     public void visitUnaryExpression(UnaryExpr expression) {
         Enum<?> operator = expression.getOperator();
-        if (operator == Token.TokenType.OP) {
+        if (operator == Token.TokenType.QUERY) {
+            System.out.print("?");
+        } else if (operator == Token.TokenType.OP) {
             System.out.print("!");
         } else if (operator == Token.TokenType.NOT) {
             System.out.print("~");
