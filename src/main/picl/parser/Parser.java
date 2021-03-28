@@ -180,7 +180,6 @@ public class Parser implements IParser<INode> {
         IExpr condition = null;
         if (match(UNTIL)) {
             condition = disjunction();
-//            consume("Expect ';' after UNTIL condition in REPEAT statement.", SEMICOLON);
         } else {
             consume("Expect END after REPEAT statement without UNTIL condition.", END);
         }
