@@ -4,7 +4,7 @@ import main.parser.Environment;
 
 import java.io.PrintWriter;
 
-public class AssignmentExprPrinter extends BinaryPrinter
+public class AssignmentExprPrinter extends BinaryExprPrinter
 {
     public AssignmentExprPrinter(PrintWriter stream, int currentLine){
         this.stream = stream;
@@ -13,7 +13,6 @@ public class AssignmentExprPrinter extends BinaryPrinter
 
     @Override
     public int print(Object left, Object right) {
-        System.out.println(left + " : " +  right);
         Object value = null;
         String mnemonic = null;
         if (right instanceof Integer && (Integer) right == 0) {

@@ -5,7 +5,7 @@ import main.parser.IParser;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.printer.AssignmentExprPrinter;
-import main.picl.interpreter.printer.BinaryPrinter;
+import main.picl.interpreter.printer.BinaryExprPrinter;
 import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
@@ -115,7 +115,7 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitBinaryExpression(final BinaryExpr expression) {
         // TODO: assign the correct printer based on the expression operator
-        BinaryPrinter printer = new AssignmentExprPrinter(stream, line);
+        BinaryExprPrinter printer = new AssignmentExprPrinter(stream, line);
         expression.getRight().accept(this);
         Object right = stackTop;
         expression.getLeft().accept(this);

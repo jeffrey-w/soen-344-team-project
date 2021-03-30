@@ -2,7 +2,7 @@ package main.picl.interpreter.printer;
 
 import java.io.PrintWriter;
 
-public abstract class BinaryPrinter
+public abstract class BinaryExprPrinter
 {
     PrintWriter stream;
     int currentLine;
