@@ -4,6 +4,8 @@ import main.parser.Environment;
 import main.parser.IParser;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
+import main.picl.interpreter.printer.AssignmentExprPrinter;
+import main.picl.interpreter.printer.BinaryPrinter;
 import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
@@ -112,28 +114,13 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitBinaryExpression(final BinaryExpr expression) {
-        // TODO
+        // TODO: assign the correct printer based on the expression operator
+        BinaryPrinter printer = new AssignmentExprPrinter(stream, line);
         expression.getRight().accept(this);
-        Object value = null;
-        String mnemonic = null;
-        if (stackTop instanceof Integer && (Integer) stackTop == 0) {
-            expression.getLeft().accept(this);
-            stream.println(line++ + " CLRF " + ((Environment.EntryInfo)stackTop).value);
-            return;
-        } else if (stackTop instanceof Integer) {
-            mnemonic = " MOVLW ";
-            value = stackTop;
-        } else if (stackTop instanceof Environment.EntryInfo){
-            value = ((Environment.EntryInfo) stackTop).value;
-            if (((Environment.EntryInfo) stackTop).type == null) {
-                mnemonic = " MOVLW ";
-            } else {
-                mnemonic = " MOVFW ";
-            }
-        }
-        stream.println(line++ + mnemonic + value);
+        Object right = stackTop;
         expression.getLeft().accept(this);
-        stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);
+        Object left = stackTop;
+        line = printer.print(left, right);
     }
 
     @Override
