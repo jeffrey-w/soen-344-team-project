@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 
 public abstract class BinaryExprPrinter
 {
-    PrintWriter stream;
-    int currentLine;
+    private PrintWriter stream;
+    private int currentLine;
 
     /**
      *
