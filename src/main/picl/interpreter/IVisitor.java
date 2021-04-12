@@ -82,12 +82,13 @@ public interface IVisitor {
      */
     void visitExpressionStatement(ExpressionStmt statement);
 
-    /**
-     * Interprets the specified {@code expression}
-     *
-     * @param expression specified {@code BinaryExpr}
-     */
-    void visitBinaryExpression(BinaryExpr expression);
+    void visitAssignmentExpression(AssignmentExpr expression);
+
+    void visitLogicalExpression(LogicalExpr expression);
+
+    void visitComparisonExpression(ComparisonExpr expression);
+
+    void visitArithmeticExpression(ArithmeticExpr expression);
 
     /**
      * Interprets the specified {@code expression}

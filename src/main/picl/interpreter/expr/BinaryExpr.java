@@ -1,16 +1,25 @@
 package main.picl.interpreter.expr;
 
-import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
 
 /**
  * The type Binary expr.
  */
-public final class BinaryExpr implements IExpr {
+public abstract class BinaryExpr implements IExpr {
 
     private final IExpr left;
     private final IExpr right;
     private final Enum<?> operator;
+
+    static IToken validateOperator(IToken operator, Enum<?>... validTypes) {
+        for (Enum<?> type : validTypes) {
+            if (operator.getType() == type) {
+                return operator;
+            }
+        }
+        throw new IllegalArgumentException("Invalid operator: " + operator.getType() + ".");
+    }
+
 
     /**
      * Instantiates a new Binary expr.
@@ -50,11 +59,6 @@ public final class BinaryExpr implements IExpr {
      */
     public Enum<?> getOperator() {
         return operator;
-    }
-
-    @Override
-    public void accept(IVisitor visitor) {
-        visitor.visitBinaryExpression(this);
     }
 
 }

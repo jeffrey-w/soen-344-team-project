@@ -1,7 +1,5 @@
 package main.parser;
 
-import main.picl.interpreter.decl.IDecl;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +8,18 @@ import java.util.Map;
  */
 public final class Environment {
 
-    private final Map<String, IDecl> symbols;
+    public static class EntryInfo {
+        public Enum<?> type;
+        public int value;
+
+        public EntryInfo(Enum<?> type, int value) {
+            this.type = type;
+            this.value = value;
+        }
+
+    }
+
+    private final Map<String, EntryInfo> symbols;
 
     /**
      * Instantiates a new Environment.
@@ -23,10 +32,10 @@ public final class Environment {
      * Add.
      *
      * @param identifier the identifier
-     * @param declaration the declaration
+     * @param info the info
      */
-    public void add(String identifier, IDecl declaration) {
-        symbols.put(identifier, declaration);
+    public void add(String identifier, EntryInfo info) {
+        symbols.put(identifier, info);
     }
 
     /**
@@ -35,7 +44,7 @@ public final class Environment {
      * @param identifier the identifier
      * @return the decl
      */
-    public IDecl get(String identifier) {
+    public EntryInfo get(String identifier) {
         return symbols.get(identifier);
     }
 

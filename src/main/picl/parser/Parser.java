@@ -200,7 +200,7 @@ public class Parser implements IParser<INode> {
         if (match(BECOMES)) {
             IToken operator = previous;
             IExpr right = disjunction();
-            return new BinaryExpr(left, right, operator);
+            return new AssignmentExpr(left, right, operator);
         }
         return left;
     }
@@ -210,7 +210,7 @@ public class Parser implements IParser<INode> {
         while (match(OR)) {
             IToken operator = previous;
             IExpr right = conjunction();
-            left = new BinaryExpr(left, right, operator);
+            left = new LogicalExpr(left, right, operator);
         }
         return left;
     }
@@ -220,7 +220,7 @@ public class Parser implements IParser<INode> {
         while (match(AND)) {
             IToken operator = previous;
             IExpr right = equality();
-            left = new BinaryExpr(left, right, operator);
+            left = new LogicalExpr(left, right, operator);
         }
         return left;
     }
@@ -230,7 +230,7 @@ public class Parser implements IParser<INode> {
         while (match(EQL, NEQ)) {
             IToken operator = previous;
             IExpr right = comparison();
-            left = new BinaryExpr(left, right, operator);
+            left = new ComparisonExpr(left, right, operator);
         }
         return left;
     }
@@ -240,7 +240,7 @@ public class Parser implements IParser<INode> {
         while (match(GTR, GEQ, LSS, LEQ)) {
             IToken operator = previous;
             IExpr right = addition();
-            left = new BinaryExpr(left, right, operator);
+            left = new ComparisonExpr(left, right, operator);
         }
         return left;
     }
@@ -250,7 +250,7 @@ public class Parser implements IParser<INode> {
         while (match(PLUS, MINUS)) {
             IToken operator = previous;
             IExpr right = multiplication();
-            left = new BinaryExpr(left, right, operator);
+            left = new ArithmeticExpr(left, right, operator);
         }
         return left;
     }
@@ -260,7 +260,7 @@ public class Parser implements IParser<INode> {
         while (match(AST, SLASH)) {
             IToken operator = previous;
             IExpr right = unary();
-            left = new BinaryExpr(left, right, operator);
+            left = new ArithmeticExpr(left, right, operator);
         }
         return left;
     }

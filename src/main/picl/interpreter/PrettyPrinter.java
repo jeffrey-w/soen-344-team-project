@@ -192,9 +192,28 @@ public class PrettyPrinter implements IVisitor {
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpr expression) {
+    public void visitAssignmentExpression(AssignmentExpr expression) {
+        visitBinaryExpression(expression);
+    }
+
+    @Override
+    public void visitLogicalExpression(LogicalExpr expression) {
+        visitBinaryExpression(expression);
+    }
+
+    @Override
+    public void visitComparisonExpression(ComparisonExpr expression) {
+        visitBinaryExpression(expression);
+    }
+
+    @Override
+    public void visitArithmeticExpression(ArithmeticExpr expression) {
+        visitBinaryExpression(expression);
+    }
+
+    private void visitBinaryExpression(BinaryExpr expression) {
         expression.getLeft().accept(this);
-        System.out.print(SYMBOLS.get(expression.getOperator())); // TODO
+        System.out.print(SYMBOLS.get(expression.getOperator()));
         expression.getRight().accept(this);
     }
 
