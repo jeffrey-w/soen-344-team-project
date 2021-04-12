@@ -111,7 +111,7 @@ public class CodeGenerator implements IVisitor {
     }
 
     @Override
-    public void visitBinaryExpression(final BinaryExpr expression) {
+    public void visitAssignmentExpression(AssignmentExpr expression) {
         // TODO
         expression.getRight().accept(this);
         Object value = null;
@@ -133,7 +133,22 @@ public class CodeGenerator implements IVisitor {
         }
         stream.println(line++ + mnemonic + value);
         expression.getLeft().accept(this);
-        stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);
+        stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);   
+    }
+
+    @Override
+    public void visitLogicalExpression(LogicalExpr expression) {
+        
+    }
+
+    @Override
+    public void visitComparisonExpression(ComparisonExpr expression) {
+        
+    }
+
+    @Override
+    public void visitArithmenticExpression(ArithmeticExpr expression) {
+
     }
 
     @Override
@@ -160,4 +175,5 @@ public class CodeGenerator implements IVisitor {
     public void visitLiteralExpression(final LiteralExpr expression) {
         stackTop = expression.getValue();
     }
+
 }
