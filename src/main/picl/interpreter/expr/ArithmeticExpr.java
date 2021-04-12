@@ -13,7 +13,7 @@ public class ArithmeticExpr extends BinaryExpr {
 
     @Override
     public void accept(IVisitor visitor) {
-        visitor.visitArithmenticExpression(this);       
+        visitor.visitArithmeticExpression(this);
     }
 
 }

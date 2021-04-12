@@ -25,7 +25,7 @@ public class CodeGenerator implements IVisitor {
         generator.generate();
     }
 
-    private int address;
+    private int address = 12;
     private int line;
     private Environment globals;
     private SyntaxTree ast;
@@ -138,7 +138,6 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitLogicalExpression(LogicalExpr expression) {
-        
     }
 
     @Override
@@ -147,7 +146,7 @@ public class CodeGenerator implements IVisitor {
     }
 
     @Override
-    public void visitArithmenticExpression(ArithmeticExpr expression) {
+    public void visitArithmeticExpression(ArithmeticExpr expression) {
 
     }
 

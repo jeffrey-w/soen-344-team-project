@@ -207,7 +207,7 @@ public class PrettyPrinter implements IVisitor {
     }
 
     @Override
-    public void visitArithmenticExpression(ArithmeticExpr expression) {
+    public void visitArithmeticExpression(ArithmeticExpr expression) {
         visitBinaryExpression(expression);
     }
 

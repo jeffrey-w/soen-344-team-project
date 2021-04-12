@@ -88,7 +88,7 @@ public interface IVisitor {
 
     void visitComparisonExpression(ComparisonExpr expression);
 
-    void visitArithmenticExpression(ArithmeticExpr expression);
+    void visitArithmeticExpression(ArithmeticExpr expression);
 
     /**
      * Interprets the specified {@code expression}
