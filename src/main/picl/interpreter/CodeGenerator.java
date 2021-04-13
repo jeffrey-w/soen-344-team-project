@@ -8,18 +8,16 @@ import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Objects;
 
 public class CodeGenerator implements IVisitor {
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Assignments.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/IfStatements.mod"));
         IParser parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -31,6 +29,7 @@ public class CodeGenerator implements IVisitor {
     private SyntaxTree ast;
     private Object stackTop;
     private PrintWriter stream;
+    private RandomAccessFile randomAccessFile = new RandomAccessFile("a.out", "rwd");
 
     public CodeGenerator(SyntaxTree ast) throws FileNotFoundException {
         this.globals = new Environment();
@@ -86,7 +85,28 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitIfStatement(final IfStmt statement) {
+        for(Map.Entry<IExpr, IStmt> guardedStatement : statement) {
+            IExpr expression = guardedStatement.getKey();
+            if (expression != null) {
+                expression.accept(this);
+            }
+            try {
+                randomAccessFile.write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
+                randomAccessFile.write((line++ + " GOTO ").getBytes());
+                long pos = randomAccessFile.getFilePointer();
+                randomAccessFile.write("  \n".getBytes()); // TODO generalize number of leading spaces for any number of lines
+                guardedStatement.getValue().accept(this);
+                randomAccessFile.seek(pos);
+                randomAccessFile.write(String.valueOf(line).getBytes());
+                randomAccessFile.seek(randomAccessFile.length());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
+    private void tryWriteBytes(String bytes) {
+        // TODO
     }
 
     @Override
@@ -113,27 +133,31 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitAssignmentExpression(AssignmentExpr expression) {
         // TODO
-        expression.getRight().accept(this);
-        Object value = null;
-        String mnemonic = null;
-        if (stackTop instanceof Integer && (Integer) stackTop == 0) {
-            expression.getLeft().accept(this);
-            stream.println(line++ + " CLRF " + ((Environment.EntryInfo)stackTop).value);
-            return;
-        } else if (stackTop instanceof Integer) {
-            mnemonic = " MOVLW ";
-            value = stackTop;
-        } else if (stackTop instanceof Environment.EntryInfo){
-            value = ((Environment.EntryInfo) stackTop).value;
-            if (((Environment.EntryInfo) stackTop).type == null) {
+        try {
+            expression.getRight().accept(this);
+            Object value = null;
+            String mnemonic = null;
+            if (stackTop instanceof Integer && (Integer) stackTop == 0) {
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " CLRF " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                return;
+            } else if (stackTop instanceof Integer) {
                 mnemonic = " MOVLW ";
-            } else {
-                mnemonic = " MOVFW ";
+                value = stackTop;
+            } else if (stackTop instanceof Environment.EntryInfo){
+                value = ((Environment.EntryInfo) stackTop).value;
+                if (((Environment.EntryInfo) stackTop).type == null) {
+                    mnemonic = " MOVLW ";
+                } else {
+                    mnemonic = " MOVFW ";
+                }
             }
+            randomAccessFile.write((line++ + mnemonic + value + "\n").getBytes());
+            expression.getLeft().accept(this);
+            randomAccessFile.write((line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        stream.println(line++ + mnemonic + value);
-        expression.getLeft().accept(this);
-        stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);   
     }
 
     @Override
