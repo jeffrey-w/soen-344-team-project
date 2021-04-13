@@ -19,7 +19,7 @@ import java.util.Map.Entry;
 public class CodeGenerator implements IVisitor {
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/IfStatements.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/WhileStatements.mod"));
         IParser parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -69,12 +69,22 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitProcedureDeclaration(final ProcedureDecl declaration) {
-
+        try {
+            randomAccessFile.write((line++ + " Procedure Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitParameterDeclaration(final ParameterDecl declaration) {
-
+        try {
+            randomAccessFile.write((line++ + " Parameter Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -85,6 +95,8 @@ public class CodeGenerator implements IVisitor {
         }
     }
 
+
+    // TODO Check Assignment Order of prints may be buggy
     @Override
     public void visitIfStatement(final IfStmt statement) {
         Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
@@ -144,17 +156,39 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitWhileStatement(final WhileStmt statement) {
-
+        Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
+        int initialLine = this.line;
+        while (statementIterator.hasNext()) {
+            Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
+            guardedStatement.getKey().accept(this);
+            guardedStatement.getValue().accept(this);
+        }
+        try {
+            randomAccessFile.write((line++ + " GOTO " + initialLine + "\n\n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitRepeatStatement(final RepeatStmt statement) {
-
+        try {
+            randomAccessFile.write((line++ + " Repeat Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitReturnStatement(final ReturnStmt statement) {
-
+        try {
+            randomAccessFile.write((line++ + " Return Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -196,11 +230,22 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitLogicalExpression(LogicalExpr expression) {
+        try {
+            randomAccessFile.write((line++ + " Logical Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
-
+        try {
+            randomAccessFile.write((line++ + " Comparison Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -215,17 +260,32 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitUnaryExpression(final UnaryExpr expression) {
-
+        try {
+            randomAccessFile.write((line++ + " Unary Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitCallExpression(final CallExpr expression) {
-
+        try {
+            randomAccessFile.write((line++ + " Call Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitGetExpression(final GetExpr expression) {
-
+        try {
+            randomAccessFile.write((line++ + " Get Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
