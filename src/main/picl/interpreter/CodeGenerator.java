@@ -11,8 +11,10 @@ import main.picl.parser.SyntaxTree;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.Map.Entry;
 
 public class CodeGenerator implements IVisitor {
 
@@ -29,7 +31,7 @@ public class CodeGenerator implements IVisitor {
     private SyntaxTree ast;
     private Object stackTop;
     private PrintWriter stream;
-    private RandomAccessFile randomAccessFile = new RandomAccessFile("a.out", "rwd");
+    private RandomAccessFile randomAccessFile = new RandomAccessFile("a.out", "rws");
 
     public CodeGenerator(SyntaxTree ast) throws FileNotFoundException {
         this.globals = new Environment();
@@ -85,23 +87,54 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitIfStatement(final IfStmt statement) {
-        for(Map.Entry<IExpr, IStmt> guardedStatement : statement) {
+        Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
+        ArrayList<Long> elseIfLocations = new ArrayList<Long>();
+        while (statementIterator.hasNext()) {
+            Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
             IExpr expression = guardedStatement.getKey();
+
+            // ELSE token will not have a key therefore only evaluate the value
             if (expression != null) {
                 expression.accept(this);
-            }
-            try {
-                randomAccessFile.write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
-                randomAccessFile.write((line++ + " GOTO ").getBytes());
-                long pos = randomAccessFile.getFilePointer();
-                randomAccessFile.write("  \n".getBytes()); // TODO generalize number of leading spaces for any number of lines
+                try {
+                    randomAccessFile
+                            .write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
+                    randomAccessFile.write((line++ + " GOTO ").getBytes());
+                    long pos = randomAccessFile.getFilePointer();
+                    randomAccessFile.write("  \n".getBytes()); // TODO generalize number of leading spaces
+
+                    guardedStatement.getValue().accept(this);
+                    
+                    // For every ELSEIF statement we nee to add a GOTO at the end to point to the
+                    // end of the IFStmt
+                    if (statementIterator.hasNext()) {
+                        randomAccessFile.write((line++ + " GOTO ").getBytes());
+                        elseIfLocations.add(randomAccessFile.getFilePointer());
+                        randomAccessFile.write("  \n".getBytes());
+                    }
+                    randomAccessFile.seek(pos);
+                    randomAccessFile.write(String.valueOf(line).getBytes());
+                    randomAccessFile.seek(randomAccessFile.length());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
                 guardedStatement.getValue().accept(this);
+            }
+
+        }
+
+        // Update the line number for all ELSEIF GOTO statements
+        try {
+            randomAccessFile.write("\n".getBytes());
+            for (long pos : elseIfLocations) {
                 randomAccessFile.seek(pos);
                 randomAccessFile.write(String.valueOf(line).getBytes());
                 randomAccessFile.seek(randomAccessFile.length());
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
@@ -139,12 +172,13 @@ public class CodeGenerator implements IVisitor {
             String mnemonic = null;
             if (stackTop instanceof Integer && (Integer) stackTop == 0) {
                 expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " CLRF " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                randomAccessFile
+                        .write((line++ + " CLRF " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
                 return;
             } else if (stackTop instanceof Integer) {
                 mnemonic = " MOVLW ";
                 value = stackTop;
-            } else if (stackTop instanceof Environment.EntryInfo){
+            } else if (stackTop instanceof Environment.EntryInfo) {
                 value = ((Environment.EntryInfo) stackTop).value;
                 if (((Environment.EntryInfo) stackTop).type == null) {
                     mnemonic = " MOVLW ";
@@ -154,7 +188,7 @@ public class CodeGenerator implements IVisitor {
             }
             randomAccessFile.write((line++ + mnemonic + value + "\n").getBytes());
             expression.getLeft().accept(this);
-            randomAccessFile.write((line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+            randomAccessFile.write((line++ + " MOVWF " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -166,7 +200,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
-        
+
     }
 
     @Override
