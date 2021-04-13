@@ -171,7 +171,12 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitArithmeticExpression(ArithmeticExpr expression) {
-
+        try {
+            randomAccessFile.write((line++ + " Arithmetic Unimplemented \n").getBytes());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
