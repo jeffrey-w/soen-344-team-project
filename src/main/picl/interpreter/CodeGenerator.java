@@ -7,19 +7,18 @@ import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
+import main.picl.scanner.Token;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class CodeGenerator implements IVisitor {
-
+    private Map<Long,String> gotoLocations = new LinkedHashMap<Long, String>();
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/WhileStatements.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/IfStatements.mod"));
         IParser parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -101,6 +100,7 @@ public class CodeGenerator implements IVisitor {
     public void visitIfStatement(final IfStmt statement) {
         Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
         ArrayList<Long> elseIfLocations = new ArrayList<Long>();
+        gotoLocations = new LinkedHashMap<Long, String>();
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
             IExpr expression = guardedStatement.getKey();
@@ -109,12 +109,27 @@ public class CodeGenerator implements IVisitor {
             if (expression != null) {
                 expression.accept(this);
                 try {
-                    randomAccessFile
-                            .write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
+                    if(stackTop instanceof Environment.EntryInfo) {
+                        randomAccessFile
+                                .write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
+                    }
                     randomAccessFile.write((line++ + " GOTO ").getBytes());
                     long pos = randomAccessFile.getFilePointer();
                     randomAccessFile.write("  \n".getBytes()); // TODO generalize number of leading spaces
-
+                    for (Map.Entry<Long, String> entry : gotoLocations.entrySet()) {
+                        Long conditionalPos = entry.getKey();
+                        String conditionalType = entry.getValue();
+                        if(conditionalType.equalsIgnoreCase("then")) {
+                            randomAccessFile.seek(conditionalPos);
+                            randomAccessFile.write(String.valueOf(line).getBytes());
+                            randomAccessFile.seek(randomAccessFile.length());
+                        }
+                        else {
+                            randomAccessFile.seek(conditionalPos);
+                            randomAccessFile.write(String.valueOf(line + 1).getBytes());
+                            randomAccessFile.seek(randomAccessFile.length());
+                        }
+                    }
                     guardedStatement.getValue().accept(this);
                     
                     // For every ELSEIF statement we nee to add a GOTO at the end to point to the
@@ -231,17 +246,96 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitLogicalExpression(LogicalExpr expression) {
         try {
-            randomAccessFile.write((line++ + " Logical Unimplemented \n").getBytes());
+            stackTop = expression.getOperator();
+            expression.getLeft().accept(this);
+            if(expression.getOperator() == Token.TokenType.OR) {
+                randomAccessFile.write((line++ + " GOTO ").getBytes());
+                gotoLocations.put(randomAccessFile.getFilePointer(), "then");
+                randomAccessFile.write(("  \n").getBytes());
+            }
+            else {
+                randomAccessFile.write((line++ + " GOTO ").getBytes());
+                gotoLocations.put(randomAccessFile.getFilePointer(), "end");
+                randomAccessFile.write(("  \n").getBytes());
+            }
+            expression.getRight().accept(this);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
     }
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
         try {
-            randomAccessFile.write((line++ + " Comparison Unimplemented \n").getBytes());
+            Enum<?> operator = expression.getOperator();
+            if(operator == Token.TokenType.EQL){
+                //MOVFW 0 RightAddress
+                expression.getRight().accept(this);
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSS 2 3
+                randomAccessFile.write((line++ + " BTFSS 2 3" + "\n").getBytes());
+                stackTop = true;
+            }
+            else if(operator == Token.TokenType.NEQ){
+                //MOVFW 0 RightAddress
+                expression.getRight().accept(this);
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSC 2 3
+                randomAccessFile.write((line++ + " BTFSC 2 3" + "\n").getBytes());
+                stackTop = true;
+            }
+            else if(operator == Token.TokenType.GTR){
+                //MOVFW 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 RightAddress
+                expression.getRight().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSC 0 3
+                randomAccessFile.write((line++ + " BTFSC 0 3" + "\n").getBytes());
+                stackTop = true;
+            }
+            else if(operator == Token.TokenType.GEQ){
+                //MOVFW 0 RightAddress
+                expression.getRight().accept(this);
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSS 0 3
+                randomAccessFile.write((line++ + " BTFSS 0 3" + "\n").getBytes());
+                stackTop = true;
+            }
+            else if(operator == Token.TokenType.LSS){
+                //MOVFW 0 RightAddress
+                expression.getRight().accept(this);
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSS 0 3
+                randomAccessFile.write((line++ + " BTFSS 0 3" + "\n").getBytes());
+                stackTop = true;
+            }
+            else if(operator == Token.TokenType.LEQ){
+                expression.getRight().accept(this);
+                //MOVFW 0 RightAddress
+                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //SUBWF 0 LeftAddress
+                expression.getLeft().accept(this);
+                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
+                //BTFSC 0 3
+                randomAccessFile.write((line++ + " BTFSC 0 3" + "\n").getBytes());
+                stackTop = true;
+            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
