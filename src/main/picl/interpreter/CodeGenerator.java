@@ -7,6 +7,7 @@ import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
+import main.picl.scanner.Token;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -131,9 +132,9 @@ public class CodeGenerator implements IVisitor {
                 mnemonic = " MOVFW ";
             }
         }
-        stream.println(line++ + mnemonic + value);
+        //stream.println(line++ + mnemonic + value);
         expression.getLeft().accept(this);
-        stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);   
+        //stream.println(line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value);
     }
 
     @Override
@@ -147,12 +148,65 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitArithmeticExpression(ArithmeticExpr expression) {
+        Enum <?> operator = expression.getOperator();
+
+        if(operator == Token.TokenType.PLUS){
+            expression.getLeft().accept(this);
+            //print
+            expression.getRight().accept(this);
+            //print
+        } else if(operator == Token.TokenType.MINUS){
+            expression.getLeft().accept(this);
+            //print
+            expression.getRight().accept(this);
+            //print
+
+        } else if(operator == Token.TokenType.AST){
+            expression.getLeft().accept(this);
+            stream.println((line++ + " CLRF " + ((Environment.EntryInfo)stackTop).value + "\n"));
+            expression.getRight().accept(this);
+            stream.println((line++ + " MOVLW " + ((Environment.EntryInfo)stackTop).value + "\n"));
+            stream.println((line++ + " MOVWF " + ((Environment.EntryInfo)stackTop).value + "\n"));
+
+        } else if(operator == Token.TokenType.SLASH){
+            expression.getLeft().accept(this);
+            //print
+            expression.getRight().accept(this);
+            //print
+
+        }
 
     }
 
     @Override
-    public void visitUnaryExpression(final UnaryExpr expression) {
+    public void visitUnaryExpression(UnaryExpr expression) {
+        Enum<?> operator = expression.getOperator();
+        String mnemonic = null;
 
+        if (operator == Token.TokenType.QUERY) {
+            mnemonic = "BTFSS ";
+            //QUERY NOT case ?~
+        } else if (operator == Token.TokenType.OP) {
+            //print
+        } else if (operator == Token.TokenType.NOT) {
+            //print
+        } else if (operator == Token.TokenType.SET) {
+            mnemonic = "BSF ";
+            //SET NOT case !~ (clear)
+        } else if (operator == Token.TokenType.DEC) {
+            mnemonic = "DECF ";
+        } else if (operator == Token.TokenType.INC) {
+            mnemonic = "INCF ";
+        } else if (operator == Token.TokenType.ROL) {
+            mnemonic = "RLF ";
+        } else if (operator == Token.TokenType.ROR) {
+            mnemonic = "RRF ";
+        }else {
+            //print
+        }
+
+        expression.getOperand().accept(this);
+        stream.println(line++ + mnemonic + ((Environment.EntryInfo)stackTop).value);
     }
 
     @Override
