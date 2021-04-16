@@ -7,6 +7,7 @@ import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
+import org.w3c.dom.ls.LSOutput;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,8 +20,9 @@ import java.util.Objects;
 public class CodeGenerator implements IVisitor {
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Assignments.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Procedures.mod"));
         IParser parser = new Parser(new String(bytes));
+        //new CodeGenerator with (SyntaxTree) parser.parse() being passed to it, AKA SyntaxTree corresponding to the Module from bytes
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
     }
@@ -39,6 +41,7 @@ public class CodeGenerator implements IVisitor {
     }
 
     public void generate() {
+        //ast.getHead() == sine decl/expr/stmt, based on the type of ast.getHead(), its that respective.accept() method that will be called
         ast.getHead().accept(this);
         stream.close();
     }
@@ -66,14 +69,24 @@ public class CodeGenerator implements IVisitor {
         }
     }
 
+    // TODO Logan
     @Override
     public void visitProcedureDeclaration(final ProcedureDecl declaration) {
-
+        for (IDecl decl : declaration.getDeclarations()){
+            decl.accept(this);
+        }
+        if(declaration.hasParameter()){
+            declaration.getParameter().accept(this);
+        }
+        if(declaration.hasReturnStatement()){
+            declaration.getReturnStatement().accept(this);
+        }
     }
 
+    // TODO Logan
     @Override
     public void visitParameterDeclaration(final ParameterDecl declaration) {
-
+        globals.add(declaration.getIdentifier(), new Environment.EntryInfo(declaration.getType(), address++));
     }
 
     @Override
@@ -99,9 +112,11 @@ public class CodeGenerator implements IVisitor {
 
     }
 
+    // TODO Logan
     @Override
     public void visitReturnStatement(final ReturnStmt statement) {
-
+        //work in progress
+        stream.println(line++ + " RET ");
     }
 
     @Override
