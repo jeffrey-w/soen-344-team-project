@@ -2,50 +2,60 @@ package main.picl.interpreter;
 
 import main.parser.Environment;
 import main.parser.IParser;
+import main.parser.IValue;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
+import main.picl.parser.LiteralValue;
+import main.picl.parser.MemoryAddressValue;
 import main.picl.parser.Parser;
 import main.picl.parser.SyntaxTree;
 import main.picl.scanner.Token;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
 public class CodeGenerator implements IVisitor {
-    private Map<Long,String> gotoLocations = new LinkedHashMap<Long, String>();
+
     public static void main(String[] args) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get("./programs/IfStatements.mod"));
-        IParser parser = new Parser(new String(bytes));
+        IParser<INode> parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
     }
 
-    private int address = 12;
     private int line;
-    private Environment globals;
-    private SyntaxTree ast;
-    private Object stackTop;
-    private PrintWriter stream;
-    private RandomAccessFile randomAccessFile = new RandomAccessFile("a.out", "rws");
+    private int address; // TODO move to Environment
+    private final SyntaxTree ast;
+    private final Environment globals;
+    private IValue stackTop;
+    private final StringBuilder output;
+    private Map<Integer, String> gotoLocations;
 
-    public CodeGenerator(SyntaxTree ast) throws FileNotFoundException {
+    public CodeGenerator(SyntaxTree ast) {
+        address = 0xC;
         this.globals = new Environment();
         this.ast = Objects.requireNonNull(ast);
-        stream = new PrintWriter(new FileOutputStream("a.out"));
+        output = new StringBuilder();
     }
 
     public void generate() {
         ast.getHead().accept(this);
-        stream.close();
+        try (PrintStream stream = new PrintStream(new FileOutputStream("a.out"))) {
+            stream.print(output);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visitModuleDeclaration(final ModuleDecl declaration) {
-        // TODO
         for (IDecl decl : declaration.getDeclarations()) {
             decl.accept(this);
         }
@@ -56,117 +66,76 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitVariableDeclaration(final VariableDecl declaration) {
-        // TODO
         for (String identifier : declaration) {
             if (declaration.isConst()) {
-                globals.add(identifier, new Environment.EntryInfo(null, declaration.get(identifier)));
+                globals.add(identifier, new LiteralValue(declaration.get(identifier)));
             } else {
-                globals.add(identifier, new Environment.EntryInfo(declaration.getType(), address++));
+                globals.add(identifier, new MemoryAddressValue(address++));
             }
         }
     }
 
     @Override
     public void visitProcedureDeclaration(final ProcedureDecl declaration) {
-        try {
-            randomAccessFile.write((line++ + " Procedure Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void visitParameterDeclaration(final ParameterDecl declaration) {
-        try {
-            randomAccessFile.write((line++ + " Parameter Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void visitBlockStatement(final BlockStmt statement) {
-        // TODO
         for (IStmt stmt : statement) {
             stmt.accept(this);
         }
     }
 
-
     // TODO Check Assignment Order of prints may be buggy
     @Override
     public void visitIfStatement(final IfStmt statement) {
         Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
-        ArrayList<Long> elseIfLocations = new ArrayList<Long>();
-        gotoLocations = new LinkedHashMap<Long, String>();
+        ArrayList<Integer> elseIfLocations = new ArrayList<>();
+        gotoLocations = new LinkedHashMap<>();
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
             IExpr expression = guardedStatement.getKey();
-
             // ELSE token will not have a key therefore only evaluate the value
             if (expression != null) {
                 expression.accept(this);
-                try {
-                    if(stackTop instanceof Environment.EntryInfo) {
-                        randomAccessFile
-                                .write((line++ + " BTFSS 0 " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
-                    }
-                    randomAccessFile.write((line++ + " GOTO ").getBytes());
-                    long pos = randomAccessFile.getFilePointer();
-                    randomAccessFile.write("  \n".getBytes()); // TODO generalize number of leading spaces
-                    for (Map.Entry<Long, String> entry : gotoLocations.entrySet()) {
-                        Long conditionalPos = entry.getKey();
-                        String conditionalType = entry.getValue();
-                        if(conditionalType.equalsIgnoreCase("then")) {
-                            randomAccessFile.seek(conditionalPos);
-                            randomAccessFile.write(String.valueOf(line).getBytes());
-                            randomAccessFile.seek(randomAccessFile.length());
-                        }
-                        else {
-                            randomAccessFile.seek(conditionalPos);
-                            randomAccessFile.write(String.valueOf(line + 1).getBytes());
-                            randomAccessFile.seek(randomAccessFile.length());
-                        }
-                    }
-                    guardedStatement.getValue().accept(this);
-                    
-                    // For every ELSEIF statement we nee to add a GOTO at the end to point to the
-                    // end of the IFStmt
-                    if (statementIterator.hasNext()) {
-                        randomAccessFile.write((line++ + " GOTO ").getBytes());
-                        elseIfLocations.add(randomAccessFile.getFilePointer());
-                        randomAccessFile.write("  \n".getBytes());
-                    }
-                    randomAccessFile.seek(pos);
-                    randomAccessFile.write(String.valueOf(line).getBytes());
-                    randomAccessFile.seek(randomAccessFile.length());
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (stackTop instanceof MemoryAddressValue) {
+                    output.append(line++).append(" BTFSS 0 ").append(stackTop.getPayload()).append("\n");
                 }
+                output.append(line++).append(" GOTO ");
+                int pos = output.length();
+                output.append("\n");
+                for (Entry<Integer, String> entry : gotoLocations.entrySet()) {
+                    int conditionalPos = entry.getKey();
+                    String conditionalType = entry.getValue();
+                    if (conditionalType.equalsIgnoreCase("then")) {
+                        output.insert(conditionalPos, line);
+                    } else {
+                        output.insert(conditionalPos, line + 1);
+                    }
+                }
+                guardedStatement.getValue().accept(this);
+                // For every ELSEIF statement we nee to add a GOTO at the end to point to the
+                // end of the IFStmt
+                if (statementIterator.hasNext()) {
+                    output.append(line++).append(" GOTO ");
+                    elseIfLocations.add(output.length());
+                    output.append("\n");
+                }
+                output.insert(pos, line);
             } else {
                 guardedStatement.getValue().accept(this);
             }
 
         }
-
         // Update the line number for all ELSEIF GOTO statements
-        try {
-            randomAccessFile.write("\n".getBytes());
-            for (long pos : elseIfLocations) {
-                randomAccessFile.seek(pos);
-                randomAccessFile.write(String.valueOf(line).getBytes());
-                randomAccessFile.seek(randomAccessFile.length());
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        output.append("\n");
+        for (int pos : elseIfLocations) {
+            output.insert(pos, line);
         }
-    }
-
-    private void tryWriteBytes(String bytes) {
-        // TODO
     }
 
     @Override
@@ -178,208 +147,156 @@ public class CodeGenerator implements IVisitor {
             guardedStatement.getKey().accept(this);
             guardedStatement.getValue().accept(this);
         }
-        try {
-            randomAccessFile.write((line++ + " GOTO " + initialLine + "\n\n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        output.append(line++).append(" GOTO ").append(initialLine).append("\n\n");
     }
 
     @Override
     public void visitRepeatStatement(final RepeatStmt statement) {
-        try {
-            randomAccessFile.write((line++ + " Repeat Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        int start = line;
+        statement.getStatements().accept(this);
+        if (statement.hasGuard()) {
+            statement.getGuard().accept(this);
         }
+        output.append(line++).append(" GOTO ").append(start).append("\n");
     }
 
     @Override
     public void visitReturnStatement(final ReturnStmt statement) {
-        try {
-            randomAccessFile.write((line++ + " Return Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void visitExpressionStatement(final ExpressionStmt statement) {
-        // TODO
         statement.getExpression().accept(this);
     }
 
     @Override
     public void visitAssignmentExpression(AssignmentExpr expression) {
-        // TODO
-        try {
-            expression.getRight().accept(this);
-            Object value = null;
-            String mnemonic = null;
-            if (stackTop instanceof Integer && (Integer) stackTop == 0) {
+        expression.getRight().accept(this);
+        int value;
+        String mnemonic;
+        if (stackTop instanceof LiteralValue) {
+            if (stackTop.getPayload() == 0) {
                 expression.getLeft().accept(this);
-                randomAccessFile
-                        .write((line++ + " CLRF " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
+                output.append(line++).append(" CLRF  1 ").append(stackTop.getPayload()).append("\n");
                 return;
-            } else if (stackTop instanceof Integer) {
-                mnemonic = " MOVLW ";
-                value = stackTop;
-            } else if (stackTop instanceof Environment.EntryInfo) {
-                value = ((Environment.EntryInfo) stackTop).value;
-                if (((Environment.EntryInfo) stackTop).type == null) {
-                    mnemonic = " MOVLW ";
-                } else {
-                    mnemonic = " MOVFW ";
-                }
+            } else {
+                mnemonic = " MOVLW   ";
+                value = stackTop.getPayload();
             }
-            randomAccessFile.write((line++ + mnemonic + value + "\n").getBytes());
-            expression.getLeft().accept(this);
-            randomAccessFile.write((line++ + " MOVWF " + ((Environment.EntryInfo) stackTop).value + "\n").getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            value = stackTop.getPayload();
+            mnemonic = " MOVFW 0 ";
         }
+        output.append(line++).append(mnemonic).append(value).append("\n");
+        expression.getLeft().accept(this);
+        output.append(line++).append(" MOVWF 1 ").append(stackTop.getPayload()).append("\n");
     }
 
     @Override
     public void visitLogicalExpression(LogicalExpr expression) {
-        try {
-            stackTop = expression.getOperator();
-            expression.getLeft().accept(this);
-            if(expression.getOperator() == Token.TokenType.OR) {
-                randomAccessFile.write((line++ + " GOTO ").getBytes());
-                gotoLocations.put(randomAccessFile.getFilePointer(), "then");
-                randomAccessFile.write(("  \n").getBytes());
-            }
-            else {
-                randomAccessFile.write((line++ + " GOTO ").getBytes());
-                gotoLocations.put(randomAccessFile.getFilePointer(), "end");
-                randomAccessFile.write(("  \n").getBytes());
-            }
-            expression.getRight().accept(this);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        expression.getLeft().accept(this);
+        if (expression.getOperator() == Token.TokenType.OR) {
+            output.append(line++).append(" GOTO ");
+            gotoLocations.put(output.length(), "then");
+            output.append("\n");
+        } else {
+            output.append(line++).append(" GOTO ");
+            gotoLocations.put(output.length(), "end");
+            output.append(("\n"));
         }
-
+        expression.getRight().accept(this);
     }
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
-        try {
-            Enum<?> operator = expression.getOperator();
-            if(operator == Token.TokenType.EQL){
-                //MOVFW 0 RightAddress
-                expression.getRight().accept(this);
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSS 2 3
-                randomAccessFile.write((line++ + " BTFSS 2 3" + "\n").getBytes());
-                stackTop = true;
-            }
-            else if(operator == Token.TokenType.NEQ){
-                //MOVFW 0 RightAddress
-                expression.getRight().accept(this);
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSC 2 3
-                randomAccessFile.write((line++ + " BTFSC 2 3" + "\n").getBytes());
-                stackTop = true;
-            }
-            else if(operator == Token.TokenType.GTR){
-                //MOVFW 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 RightAddress
-                expression.getRight().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSC 0 3
-                randomAccessFile.write((line++ + " BTFSC 0 3" + "\n").getBytes());
-                stackTop = true;
-            }
-            else if(operator == Token.TokenType.GEQ){
-                //MOVFW 0 RightAddress
-                expression.getRight().accept(this);
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSS 0 3
-                randomAccessFile.write((line++ + " BTFSS 0 3" + "\n").getBytes());
-                stackTop = true;
-            }
-            else if(operator == Token.TokenType.LSS){
-                //MOVFW 0 RightAddress
-                expression.getRight().accept(this);
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSS 0 3
-                randomAccessFile.write((line++ + " BTFSS 0 3" + "\n").getBytes());
-                stackTop = true;
-            }
-            else if(operator == Token.TokenType.LEQ){
-                expression.getRight().accept(this);
-                //MOVFW 0 RightAddress
-                randomAccessFile.write((line++ + " MOVFW 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //SUBWF 0 LeftAddress
-                expression.getLeft().accept(this);
-                randomAccessFile.write((line++ + " SUBWF 0 " + ((Environment.EntryInfo)stackTop).value + "\n").getBytes());
-                //BTFSC 0 3
-                randomAccessFile.write((line++ + " BTFSC 0 3" + "\n").getBytes());
-                stackTop = true;
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        String test = null;
+        IValue first = null;
+        Enum<?> operator = expression.getOperator();
+        if (operator == Token.TokenType.EQL) {
+            //MOVFW 0 RightAddress
+            expression.getRight().accept(this);
+            first = stackTop;
+            test = " BTFSS 2 3\n";
+            //SUBWF 0 LeftAddress
+            expression.getLeft().accept(this);
+            //BTFSS 2 3
+        } else if (operator == Token.TokenType.NEQ) {
+            test = " BTFSC 2 3\n";
+            //MOVFW 0 RightAddress
+            expression.getRight().accept(this);
+            first = stackTop;
+            //SUBWF 0 LeftAddress
+            expression.getLeft().accept(this);
+            //BTFSC 2 3
+        } else if (operator == Token.TokenType.GTR) {
+            test = " BTFSS 0 3\n";
+            //MOVFW 0 LeftAddress
+            expression.getLeft().accept(this);
+            first = stackTop;
+            //SUBWF 0 RightAddress
+            expression.getRight().accept(this);
+            //BTFSC 0 3
+        } else if (operator == Token.TokenType.GEQ) {
+            test = " BTFSS 0 3\n";
+            //MOVFW 0 RightAddress
+            expression.getRight().accept(this);
+            first = stackTop;
+            //SUBWF 0 LeftAddress
+            expression.getLeft().accept(this);
+            //BTFSS 0 3
+        } else if (operator == Token.TokenType.LSS) {
+            test = " BTFSS 0 3\n";
+            //MOVFW 0 RightAddress
+            expression.getRight().accept(this);
+            first = stackTop;
+            //SUBWF 0 LeftAddress
+            expression.getLeft().accept(this);
+            //BTFSS 0 3
+        } else if (operator == Token.TokenType.LEQ) {
+            test = " BTFSC 0 3\n";
+            //MOVFW 0 RightAddress
+            expression.getRight().accept(this);
+            first = stackTop;
+            //SUBWF 0 LeftAddress
+            expression.getLeft().accept(this);
+            //BTFSC 0 3
+        }
+        if (test != null && first != null) {
+            output.append(line++).append(" MOVFW 0 ").append(first.getPayload());
+            output.append(line++).append(" SUBWF 0 ").append(stackTop.getPayload());
+            output.append(line++).append(test);
+        } else {
+            throw new Error(); // TODO need picl error
         }
     }
 
     @Override
     public void visitArithmeticExpression(ArithmeticExpr expression) {
-        try {
-            randomAccessFile.write((line++ + " Arithmetic Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        output.append(line++).append(" Arithmetic Unimplemented \n");
     }
 
     @Override
     public void visitUnaryExpression(final UnaryExpr expression) {
-        try {
-            randomAccessFile.write((line++ + " Unary Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        output.append(line++).append(" Unary Unimplemented \n");
     }
 
     @Override
     public void visitCallExpression(final CallExpr expression) {
-        try {
-            randomAccessFile.write((line++ + " Call Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        if (expression.hasArgument()) {
+            expression.getArgument().accept(this);
+            output.append(line++).append(" MOVFW 0 ").append(stackTop.getPayload()).append("\n");
         }
+        expression.getCallee().accept(this);
+        output.append(line++).append(" CALL ").append(stackTop.getPayload()).append("\n");
     }
 
     @Override
     public void visitGetExpression(final GetExpr expression) {
-        try {
-            randomAccessFile.write((line++ + " Get Unimplemented \n").getBytes());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        expression.getLeft().accept(this);
+        int register = stackTop.getPayload();
+        expression.getIndex().accept(this);
+        int bit = stackTop.getPayload();
+        output.append(bit).append(" ").append(register);
     }
 
     @Override
@@ -389,7 +306,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitLiteralExpression(final LiteralExpr expression) {
-        stackTop = expression.getValue();
+        stackTop = new LiteralValue(expression.getValue());
     }
 
 }

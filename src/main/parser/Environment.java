@@ -8,18 +8,7 @@ import java.util.Map;
  */
 public final class Environment {
 
-    public static class EntryInfo {
-        public Enum<?> type;
-        public int value;
-
-        public EntryInfo(Enum<?> type, int value) {
-            this.type = type;
-            this.value = value;
-        }
-
-    }
-
-    private final Map<String, EntryInfo> symbols;
+    private final Map<String, IValue> symbols;
 
     /**
      * Instantiates a new Environment.
@@ -34,7 +23,7 @@ public final class Environment {
      * @param identifier the identifier
      * @param info the info
      */
-    public void add(String identifier, EntryInfo info) {
+    public void add(String identifier, IValue info) {
         symbols.put(identifier, info);
     }
 
@@ -44,7 +33,7 @@ public final class Environment {
      * @param identifier the identifier
      * @return the decl
      */
-    public EntryInfo get(String identifier) {
+    public IValue get(String identifier) {
         return symbols.get(identifier);
     }
 
