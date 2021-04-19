@@ -21,10 +21,24 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
+import static main.picl.scanner.Token.TokenType.*;
+
 public class CodeGenerator implements IVisitor {
 
+    private enum BinaryOperationConfiguration {
+        LITERAL_LITERAL,
+        LITERAL_VARIABLE_INT,
+        LITERAL_VARIABLE_SET,
+        VARIABLE_LITERAL_INT,
+        VARIABLE_LITERAL_SET,
+        VARIABLE_VARIABLE_INT,
+        VARIABLE_VARIABLE_SET
+    }
+
+    private static final boolean THEN = true, END = false;
+
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/IfStatements.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Expressions.mod"));
         IParser<INode> parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -36,13 +50,24 @@ public class CodeGenerator implements IVisitor {
     private final Environment globals;
     private IValue stackTop;
     private final StringBuilder output;
-    private Map<Integer, String> gotoLocations;
+    private Map<Integer, Boolean> gotoLocations;
+    private boolean isGuard;
+    private boolean isAssignment;
+    private boolean isArithmetic;
+    private boolean isWaitFalse;
+    private boolean isClear;
+    private BinaryOperationConfiguration configuration;
+    private final Deque<IValue> stack;
 
     public CodeGenerator(SyntaxTree ast) {
         address = 0xC;
         this.globals = new Environment();
         this.ast = Objects.requireNonNull(ast);
         output = new StringBuilder();
+        stack = new ArrayDeque<>();
+        // TODO put this elsewhere
+        globals.add("A", new MemoryAddressValue(5, null));
+        globals.add("B", new MemoryAddressValue(6, null));
     }
 
     public void generate() {
@@ -70,7 +95,7 @@ public class CodeGenerator implements IVisitor {
             if (declaration.isConst()) {
                 globals.add(identifier, new LiteralValue(declaration.get(identifier)));
             } else {
-                globals.add(identifier, new MemoryAddressValue(address++));
+                globals.add(identifier, new MemoryAddressValue(address++, declaration.getType()));
             }
         }
     }
@@ -101,17 +126,15 @@ public class CodeGenerator implements IVisitor {
             IExpr expression = guardedStatement.getKey();
             // ELSE token will not have a key therefore only evaluate the value
             if (expression != null) {
+                isGuard = true;
                 expression.accept(this);
-                if (stackTop instanceof MemoryAddressValue) {
-                    output.append(line++).append(" BTFSS 0 ").append(stackTop.getPayload()).append("\n");
-                }
+                isGuard = false;
                 output.append(line++).append(" GOTO ");
-                int pos = output.length();
+                int pos = output.length() + (gotoLocations.isEmpty() ? 0 : 4), index = 0;
                 output.append("\n");
-                for (Entry<Integer, String> entry : gotoLocations.entrySet()) {
-                    int conditionalPos = entry.getKey();
-                    String conditionalType = entry.getValue();
-                    if (conditionalType.equalsIgnoreCase("then")) {
+                for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
+                    int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
+                    if (entry.getValue()) {
                         output.insert(conditionalPos, line);
                     } else {
                         output.insert(conditionalPos, line + 1);
@@ -119,7 +142,7 @@ public class CodeGenerator implements IVisitor {
                 }
                 guardedStatement.getValue().accept(this);
                 // For every ELSEIF statement we nee to add a GOTO at the end to point to the
-                // end of the IFStmt
+                // end of the IF statement
                 if (statementIterator.hasNext()) {
                     output.append(line++).append(" GOTO ");
                     elseIfLocations.add(output.length());
@@ -133,19 +156,25 @@ public class CodeGenerator implements IVisitor {
         }
         // Update the line number for all ELSEIF GOTO statements
         output.append("\n");
+        int index = 0;
         for (int pos : elseIfLocations) {
-            output.insert(pos, line);
+            output.insert(pos + index++ * elseIfLocations.size() + 2, line);
         }
     }
 
     @Override
     public void visitWhileStatement(final WhileStmt statement) {
+        gotoLocations = new LinkedHashMap<>();
         Iterator<Entry<IExpr, IStmt>> statementIterator = statement.iterator();
         int initialLine = this.line;
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
             guardedStatement.getKey().accept(this);
+            output.append(line++).append(" GOTO ");
+            int pos = output.length();
+            output.append("\n");
             guardedStatement.getValue().accept(this);
+            output.insert(pos, line);
         }
         output.append(line++).append(" GOTO ").append(initialLine).append("\n\n");
     }
@@ -171,25 +200,32 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitAssignmentExpression(AssignmentExpr expression) {
-        expression.getRight().accept(this);
-        int value;
-        String mnemonic;
-        if (stackTop instanceof LiteralValue) {
-            if (stackTop.getPayload() == 0) {
-                expression.getLeft().accept(this);
-                output.append(line++).append(" CLRF  1 ").append(stackTop.getPayload()).append("\n");
-                return;
-            } else {
-                mnemonic = " MOVLW   ";
-                value = stackTop.getPayload();
-            }
-        } else {
-            value = stackTop.getPayload();
-            mnemonic = " MOVFW 0 ";
-        }
-        output.append(line++).append(mnemonic).append(value).append("\n");
+        isAssignment = true;
         expression.getLeft().accept(this);
-        output.append(line++).append(" MOVWF 1 ").append(stackTop.getPayload()).append("\n");
+        IValue left = stackTop;
+        expression.getRight().accept(this);
+        if (isAssignment) {
+            int value;
+            String mnemonic;
+            if (stackTop instanceof LiteralValue) {
+                if (stackTop.getPayload() == 0) {
+                    expression.getLeft().accept(this);
+                    output.append(line++).append(" CLRF  1 ").append(stackTop.getPayload()).append("\n");
+                    return;
+                } else {
+                    mnemonic = " MOVLW   ";
+                    value = stackTop.getPayload();
+                }
+            } else {
+                value = stackTop.getPayload();
+                mnemonic = " MOVFW 0 ";
+            }
+            if (!isArithmetic) {
+                output.append(line++).append(mnemonic).append(value).append("\n");
+            }
+            output.append(line++).append(" MOVWF 1 ").append(left.getPayload()).append("\n");
+            isArithmetic = false;
+        }
     }
 
     @Override
@@ -197,11 +233,11 @@ public class CodeGenerator implements IVisitor {
         expression.getLeft().accept(this);
         if (expression.getOperator() == Token.TokenType.OR) {
             output.append(line++).append(" GOTO ");
-            gotoLocations.put(output.length(), "then");
+            gotoLocations.put(output.length(), THEN);
             output.append("\n");
         } else {
             output.append(line++).append(" GOTO ");
-            gotoLocations.put(output.length(), "end");
+            gotoLocations.put(output.length(), END);
             output.append(("\n"));
         }
         expression.getRight().accept(this);
@@ -209,6 +245,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
+        isGuard = false;
         String test = null;
         IValue first = null;
         Enum<?> operator = expression.getOperator();
@@ -222,11 +259,11 @@ public class CodeGenerator implements IVisitor {
             //BTFSS 2 3
         } else if (operator == Token.TokenType.NEQ) {
             test = " BTFSC 2 3\n";
-            //MOVFW 0 RightAddress
-            expression.getRight().accept(this);
-            first = stackTop;
-            //SUBWF 0 LeftAddress
+            //MOVFW 0 LeftAddress
             expression.getLeft().accept(this);
+            first = stackTop;
+            //SUBWF 0 RightAddress
+            expression.getRight().accept(this);
             //BTFSC 2 3
         } else if (operator == Token.TokenType.GTR) {
             test = " BTFSS 0 3\n";
@@ -262,22 +299,232 @@ public class CodeGenerator implements IVisitor {
             //BTFSC 0 3
         }
         if (test != null && first != null) {
-            output.append(line++).append(" MOVFW 0 ").append(first.getPayload());
-            output.append(line++).append(" SUBWF 0 ").append(stackTop.getPayload());
-            output.append(line++).append(test);
+            output.append(line++).append(" MOVFW 0 ").append(first.getPayload()).append("\n");
+            if (!(stackTop instanceof LiteralValue && stackTop.getPayload() == 0)) {
+                output.append(line++).append(" SUBWF 0 ").append(stackTop.getPayload()).append("\n");
+            }
+            output.append(line++).append(test).append("\n");
         } else {
             throw new Error(); // TODO need picl error
         }
+        isGuard = true;
     }
 
     @Override
     public void visitArithmeticExpression(ArithmeticExpr expression) {
-        output.append(line++).append(" Arithmetic Unimplemented \n");
+        IValue last = stackTop;
+        setupBinaryOperation(expression);
+        IValue left = stack.pop();
+        IValue right = stack.pop();
+        isArithmetic = true;
+        boolean isSelfAssignment = isAssignment && (right.getPayload() == last.getPayload() || left.getPayload() == last.getPayload());
+        switch (configuration) {
+            case LITERAL_LITERAL:
+                // TODO
+                break;
+            case LITERAL_VARIABLE_INT:
+                if (expression.getOperator() == PLUS) {
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ADDLW ").append(left.getPayload()).append("\n");
+                } else if (expression.getOperator() == MINUS) {
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" SUBLW ").append(left.getPayload()).append("\n");
+                } // TODO not addition or subtraction error
+                break;
+            case LITERAL_VARIABLE_SET:
+                if (expression.getOperator() == PLUS) {
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" IORLW 0 ").append(left.getPayload()).append("\n");
+                } else if (expression.getOperator() == MINUS) {
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" XORLW 0 ").append(left.getPayload()).append("\n");
+                } else if (expression.getOperator() == AST) {
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ANDLW 0 ").append(left.getPayload()).append("\n");
+                } // TODO other error
+                break;
+            case VARIABLE_LITERAL_INT:
+                if (expression.getOperator() == PLUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == MINUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } // TODO other error
+                break;
+            case VARIABLE_LITERAL_SET:
+                if (expression.getOperator() == PLUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == MINUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == AST) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                }
+                break;
+            case VARIABLE_VARIABLE_INT:
+                if (expression.getOperator() == PLUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == MINUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } // TODO other error
+                break;
+            case VARIABLE_VARIABLE_SET:
+                if (expression.getOperator() == PLUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == MINUS) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                } else if (expression.getOperator() == AST) {
+                    int d = isSelfAssignment ? 1 : 0;
+                    output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
+                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    isAssignment = d == 0;
+                }
+                break;
+        }
+    }
+
+    private void setupBinaryOperation(BinaryExpr expression) {
+        expression.getRight().accept(this);
+        IValue right = stackTop;
+        expression.getLeft().accept(this);
+        IValue left = stackTop;
+        if (left instanceof LiteralValue && right instanceof LiteralValue) {
+            configuration = BinaryOperationConfiguration.LITERAL_LITERAL;
+        } else if (left instanceof LiteralValue) {
+            MemoryAddressValue addressValue = (MemoryAddressValue) right;
+            if (addressValue.getType() == INT) {
+                 configuration = BinaryOperationConfiguration.LITERAL_VARIABLE_INT;
+            } else {
+                configuration = BinaryOperationConfiguration.LITERAL_VARIABLE_SET;
+            }
+        } else if (right instanceof LiteralValue) {
+            MemoryAddressValue addressValue = (MemoryAddressValue) left;
+            if (addressValue.getType() == INT) {
+                configuration = BinaryOperationConfiguration.VARIABLE_LITERAL_INT;
+            } else {
+                configuration = BinaryOperationConfiguration.VARIABLE_LITERAL_SET;
+            }
+        } else {
+            MemoryAddressValue addressValue = (MemoryAddressValue) left;
+            if (addressValue.getType() == INT) {
+                configuration = BinaryOperationConfiguration.VARIABLE_VARIABLE_INT;
+            } else {
+                configuration = BinaryOperationConfiguration.VARIABLE_VARIABLE_SET;
+            }
+        }
+        stack.push(right);
+        stack.push(left);
     }
 
     @Override
     public void visitUnaryExpression(final UnaryExpr expression) {
-        output.append(line++).append(" Unary Unimplemented \n");
+        switch ((Token.TokenType) expression.getOperator()) {
+            case QUERY:
+                if (isWaitFalse = isWaitFalse(expression)) {
+                    output.append(line++).append(" BTFSC ");
+                } else {
+                    output.append(line++).append(" BTFSS ");
+                }
+                expression.getOperand().accept(this); // Maybe variable or get
+                if (!isWaitFalse) {
+                    if (!(expression.getOperand() instanceof GetExpr)) {
+                        output.append(0 + " ").append(stackTop.getPayload()).append("\n");
+                    } else {
+                        output.append("\n");
+                    }
+                }
+                output.append(line++).append(" GOTO ").append(line - 2).append("\n");
+                isWaitFalse = false;
+                break;
+            case OP:
+                if (isClear = isClear(expression)) {
+                    output.append(line++).append(" BCF ");
+                } else {
+                    output.append(line++).append(" BSF ");
+                }
+                expression.getOperand().accept(this); // Maybe variable or get
+                if (!isClear) {
+                    if (!(expression.getOperand() instanceof GetExpr)) {
+                        outPutVariable();
+                    } else {
+                        output.append("\n");
+                    }
+                }
+                isClear = false;
+                break;
+            case NOT:
+                if (!(isClear || isWaitFalse)) { // Just a NOT. TODO does this ever happen?
+                    // TODO
+                }
+                expression.getOperand().accept(this); // Maybe variable or get
+                if (!(expression.getOperand() instanceof GetExpr)) {
+                    outPutVariable();
+                } else {
+                    output.append("\n");
+                }
+                break;
+            case INC:
+                expression.getOperand().accept(this);
+                output.append(line++).append(" INCF 1 ").append(stackTop.getPayload()).append("\n");
+                break;
+            case DEC:
+                expression.getOperand().accept(this);
+                output.append(line++).append(" DECF 1 ").append(stackTop.getPayload()).append("\n");
+                break;
+            case ROL:
+                expression.getOperand().accept(this);
+                output.append(line++).append(" RFL 1 ").append(stackTop.getPayload()).append("\n");
+                break;
+            case ROR:
+                expression.getOperand().accept(this);
+                output.append(line++).append(" RRF 1 ").append(stackTop.getPayload()).append("\n");
+                break;
+            default:
+                throw new Error(); // TODO need picl error
+        }
+    }
+
+    private boolean isWaitFalse(UnaryExpr expression) {
+        if (expression.getOperand() instanceof UnaryExpr) {
+            return ((UnaryExpr) expression.getOperand()).getOperator() == NOT;
+        }
+        return false;
+    }
+
+    private boolean isClear(UnaryExpr expression) {
+        if (expression.getOperand() instanceof  UnaryExpr) {
+            return ((UnaryExpr) expression.getOperand()).getOperator() == NOT;
+        }
+        return false;
+    }
+
+    private void outPutVariable() {
+        output.append(0 + " ").append(stackTop.getPayload()).append("\n");
     }
 
     @Override
@@ -302,6 +549,9 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitVariableExpression(final VariableExpr expression) {
         stackTop = globals.get((String) expression.getIdentifier().getValue());
+        if (isGuard) {
+            output.append(line++).append(" BTFSS 0 ").append(stackTop.getPayload()).append("\n");
+        }
     }
 
     @Override
