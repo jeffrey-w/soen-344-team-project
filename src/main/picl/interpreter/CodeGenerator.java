@@ -185,18 +185,16 @@ public class CodeGenerator implements IVisitor {
 
         if (operator == Token.TokenType.QUERY) {
             mnemonic = "BTFSS ";
-            //QUERY NOT case ?~
         } else if (operator == Token.TokenType.OP) {
             //print
         } else if (operator == Token.TokenType.NOT) {
             //print
         } else if (operator == Token.TokenType.SET) {
             mnemonic = "BSF ";
-            //SET NOT case !~ (clear)
         } else if (operator == Token.TokenType.DEC) {
             mnemonic = "DECF ";
         } else if (operator == Token.TokenType.CLEAR) {
-            mnemonic = "DECF ";
+            mnemonic = "BCF ";
         } else if (operator == Token.TokenType.INC) {
             mnemonic = "INCF ";
         } else if (operator == Token.TokenType.ROL) {
