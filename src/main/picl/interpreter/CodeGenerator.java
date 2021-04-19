@@ -38,7 +38,7 @@ public class CodeGenerator implements IVisitor {
     private static final boolean THEN = true, END = false;
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Expressions.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Conditions.mod"));
         IParser<INode> parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -207,7 +207,7 @@ public class CodeGenerator implements IVisitor {
         if (isAssignment) {
             int value;
             String mnemonic;
-            if (stackTop instanceof LiteralValue) {
+            if (stackTop instanceof LiteralValue && !isArithmetic) {
                 if (stackTop.getPayload() == 0) {
                     expression.getLeft().accept(this);
                     output.append(line++).append(" CLRF  1 ").append(stackTop.getPayload()).append("\n");
@@ -316,8 +316,8 @@ public class CodeGenerator implements IVisitor {
         setupBinaryOperation(expression);
         IValue left = stack.pop();
         IValue right = stack.pop();
+        boolean isSelfAssignment = isAssignment && (left instanceof MemoryAddressValue && left.getPayload() == last.getPayload());
         isArithmetic = true;
-        boolean isSelfAssignment = isAssignment && (right.getPayload() == last.getPayload() || left.getPayload() == last.getPayload());
         switch (configuration) {
             case LITERAL_LITERAL:
                 // TODO
