@@ -101,6 +101,10 @@ public class Scanner extends AbstractScanner {
                 }
                 return new Token(Token.TokenType.COLON, currentPosition());
             case '!':
+                if(peekCharacter() == '~'){
+                    nextCharacter();
+                    return new Token(Token.TokenType.CLEAR, currentPosition());
+                }
                 return new Token(Token.TokenType.OP, currentPosition());
             case '?':
                 return new Token(Token.TokenType.QUERY, currentPosition());

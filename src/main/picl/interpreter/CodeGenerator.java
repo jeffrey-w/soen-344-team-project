@@ -195,6 +195,8 @@ public class CodeGenerator implements IVisitor {
             //SET NOT case !~ (clear)
         } else if (operator == Token.TokenType.DEC) {
             mnemonic = "DECF ";
+        } else if (operator == Token.TokenType.CLEAR) {
+            mnemonic = "DECF ";
         } else if (operator == Token.TokenType.INC) {
             mnemonic = "INCF ";
         } else if (operator == Token.TokenType.ROL) {

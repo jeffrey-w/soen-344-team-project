@@ -266,7 +266,7 @@ public class Parser implements IParser<INode> {
     }
 
     private IExpr unary() {
-        if (match(QUERY, OP, NOT, INC, DEC, ROR, ROL)) {
+        if (match(QUERY, OP, NOT, INC, DEC, ROR, ROL, CLEAR)) {
             IToken operator = previous;
             IExpr operand = unary();
             return new UnaryExpr(operator, operand);
