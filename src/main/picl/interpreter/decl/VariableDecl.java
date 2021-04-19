@@ -3,8 +3,8 @@ package main.picl.interpreter.decl;
 import main.picl.interpreter.IVisitor;
 import main.scanner.IToken;
 
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -22,7 +22,7 @@ public final class VariableDecl implements IDecl, Iterable<String> {
      */
     public VariableDecl(IToken type) {
         this.type = type == null ? null : type.getType();
-        this.variables = new HashMap<>();
+        this.variables = new LinkedHashMap<>();
     }
 
     /**
