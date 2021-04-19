@@ -38,7 +38,7 @@ public class CodeGenerator implements IVisitor {
     private static final boolean THEN = true, END = false;
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/Conditions.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/WhileStatements.mod"));
         IParser<INode> parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -169,12 +169,24 @@ public class CodeGenerator implements IVisitor {
         int initialLine = this.line;
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
+            isGuard = true;
             guardedStatement.getKey().accept(this);
+            isGuard = false;
             output.append(line++).append(" GOTO ");
             int pos = output.length();
             output.append("\n");
             guardedStatement.getValue().accept(this);
-            output.insert(pos, line);
+            output.insert(pos, line + 1);
+            // TODO GOTO 23 instead of 22 on line 19
+            int index = 0;
+            for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
+                int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
+                if (entry.getValue()) {
+                    output.insert(conditionalPos, line);
+                } else {
+                    output.insert(conditionalPos, line + 1);
+                }
+            }
         }
         output.append(line++).append(" GOTO ").append(initialLine).append("\n\n");
     }
@@ -482,7 +494,7 @@ public class CodeGenerator implements IVisitor {
                     // TODO
                 }
                 expression.getOperand().accept(this); // Maybe variable or get
-                if (!(expression.getOperand() instanceof GetExpr)) {
+                if (!(expression.getOperand() instanceof GetExpr) && !isGuard) { // TODO check for isGuard elsewhere
                     outPutVariable();
                 } else {
                     output.append("\n");
