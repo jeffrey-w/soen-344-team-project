@@ -180,12 +180,11 @@ public class CodeGenerator implements IVisitor {
             output.append("\n");
             guardedStatement.getValue().accept(this);
             output.insert(pos, line + 1);
-            // TODO GOTO 23 instead of 22 on line 19
             int index = 0;
             for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
                 int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
                 if (entry.getValue()) {
-                    output.insert(conditionalPos, line);
+                    output.insert(conditionalPos, line - 1);
                 } else {
                     output.insert(conditionalPos, line + 1);
                 }
