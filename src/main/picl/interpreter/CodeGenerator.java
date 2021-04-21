@@ -33,12 +33,12 @@ public class CodeGenerator implements IVisitor {
         VARIABLE_LITERAL_SET,
         VARIABLE_VARIABLE_INT,
         VARIABLE_VARIABLE_SET
-    }
+    } // TODO this can be moved to BinaryExpr
 
     private static final boolean THEN = true, END = false;
 
     public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/WhileStatements.mod"));
+        byte[] bytes = Files.readAllBytes(Paths.get("./programs/RepeatStat.mod"));
         IParser<INode> parser = new Parser(new String(bytes));
         CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
         generator.generate();
@@ -56,6 +56,8 @@ public class CodeGenerator implements IVisitor {
     private boolean isArithmetic;
     private boolean isWaitFalse;
     private boolean isClear;
+    private boolean isDec;
+    private boolean isSelfAssignment;
     private BinaryOperationConfiguration configuration;
     private final Deque<IValue> stack;
 
@@ -170,6 +172,7 @@ public class CodeGenerator implements IVisitor {
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
             isGuard = true;
+            isSelfAssignment = false;
             guardedStatement.getKey().accept(this);
             isGuard = false;
             output.append(line++).append(" GOTO ");
@@ -196,9 +199,34 @@ public class CodeGenerator implements IVisitor {
         int start = line;
         statement.getStatements().accept(this);
         if (statement.hasGuard()) {
-            statement.getGuard().accept(this);
+            IExpr variable;
+            if ((variable = isRepeatSpecialCase(statement)) != null) {
+                output.delete(output.lastIndexOf("DECF"), output.length());
+                variable.accept(this);
+                output.append("DECFSZ 1 ").append(stackTop.getPayload()).append("\n");
+            } else {
+                isGuard = true;
+                statement.getGuard().accept(this);
+                isGuard = false;
+            }
         }
         output.append(line++).append(" GOTO ").append(start).append("\n");
+    }
+
+    private IExpr isRepeatSpecialCase(RepeatStmt stmt) {
+        if (stmt.getGuard() instanceof ComparisonExpr) {
+            ComparisonExpr comparisonExpr = (ComparisonExpr) stmt.getGuard();
+            if (comparisonExpr.getOperator() == EQL) {
+                IExpr left = comparisonExpr.getLeft(), right = comparisonExpr.getRight();
+                if (isDec && left instanceof LiteralExpr && ((LiteralExpr) left).getValue() == 0) {
+                    return right;
+                }
+                if (isDec && right instanceof LiteralExpr && ((LiteralExpr) right).getValue() == 0) {
+                    return left;
+                }
+            } // TODO haven't tested for LITERAL_LITERAL
+        }
+        return null;
     }
 
     @Override
@@ -208,6 +236,8 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitExpressionStatement(final ExpressionStmt statement) {
         statement.getExpression().accept(this);
+        isDec = statement.getExpression() instanceof UnaryExpr
+                && ((UnaryExpr) statement.getExpression()).getOperator() == DEC;
     }
 
     @Override
@@ -257,6 +287,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
+        boolean wasGuard = isGuard;
         isGuard = false;
         String test = null;
         IValue first = null;
@@ -310,16 +341,24 @@ public class CodeGenerator implements IVisitor {
             expression.getLeft().accept(this);
             //BTFSC 0 3
         }
-        if (test != null && first != null) {
-            output.append(line++).append(" MOVFW 0 ").append(first.getPayload()).append("\n");
-            if (!(stackTop instanceof LiteralValue && stackTop.getPayload() == 0)) {
+        isGuard = wasGuard;
+        if (first instanceof LiteralValue) {
+            output.append(line++).append(" MOVFW 0 ").append(stackTop.getPayload()).append("\n");
+            if (!(stackTop instanceof LiteralValue && stackTop.getPayload() == 0) && !isSelfAssignment) {
                 output.append(line++).append(" SUBWF 0 ").append(stackTop.getPayload()).append("\n");
             }
             output.append(line++).append(test).append("\n");
         } else {
-            throw new Error(); // TODO need picl error
-        }
-        isGuard = true;
+            if (test != null && first != null) {
+                output.append(line++).append(" MOVFW 0 ").append(first.getPayload()).append("\n");
+                if (!(stackTop instanceof LiteralValue && stackTop.getPayload() == 0) && !isSelfAssignment) {
+                    output.append(line++).append(" SUBWF 0 ").append(stackTop.getPayload()).append("\n");
+                }
+                output.append(line++).append(test).append("\n");
+            } else {
+                throw new Error(); // TODO need picl error
+            }
+        } // TODO other combinations
     }
 
     @Override
@@ -328,7 +367,8 @@ public class CodeGenerator implements IVisitor {
         setupBinaryOperation(expression);
         IValue left = stack.pop();
         IValue right = stack.pop();
-        boolean isSelfAssignment = isAssignment && (left instanceof MemoryAddressValue && left.getPayload() == last.getPayload());
+        isSelfAssignment =
+                isAssignment && (left instanceof MemoryAddressValue && left.getPayload() == last.getPayload());
         isArithmetic = true;
         switch (configuration) {
             case LITERAL_LITERAL:
@@ -359,12 +399,14 @@ public class CodeGenerator implements IVisitor {
                 if (expression.getOperator() == PLUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == MINUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } // TODO other error
                 break;
@@ -372,17 +414,20 @@ public class CodeGenerator implements IVisitor {
                 if (expression.getOperator() == PLUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == MINUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == AST) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVLW ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 }
                 break;
@@ -390,12 +435,14 @@ public class CodeGenerator implements IVisitor {
                 if (expression.getOperator() == PLUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" ADDWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == MINUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" SUBWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } // TODO other error
                 break;
@@ -403,17 +450,20 @@ public class CodeGenerator implements IVisitor {
                 if (expression.getOperator() == PLUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" IORWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == MINUS) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" XORWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 } else if (expression.getOperator() == AST) {
                     int d = isSelfAssignment ? 1 : 0;
                     output.append(line++).append(" MOVFW 0 ").append(right.getPayload()).append("\n");
-                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload()).append("\n");
+                    output.append(line++).append(" ANDWF ").append(d).append(" ").append(left.getPayload())
+                            .append("\n");
                     isAssignment = d == 0;
                 }
                 break;
@@ -430,7 +480,7 @@ public class CodeGenerator implements IVisitor {
         } else if (left instanceof LiteralValue) {
             MemoryAddressValue addressValue = (MemoryAddressValue) right;
             if (addressValue.getType() == INT) {
-                 configuration = BinaryOperationConfiguration.LITERAL_VARIABLE_INT;
+                configuration = BinaryOperationConfiguration.LITERAL_VARIABLE_INT;
             } else {
                 configuration = BinaryOperationConfiguration.LITERAL_VARIABLE_SET;
             }
@@ -529,7 +579,7 @@ public class CodeGenerator implements IVisitor {
     }
 
     private boolean isClear(UnaryExpr expression) {
-        if (expression.getOperand() instanceof  UnaryExpr) {
+        if (expression.getOperand() instanceof UnaryExpr) {
             return ((UnaryExpr) expression.getOperand()).getOperator() == NOT;
         }
         return false;
