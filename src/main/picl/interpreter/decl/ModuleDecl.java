@@ -16,6 +16,7 @@ public final class ModuleDecl implements IDecl {
     private final String identifier;
     private final List<IDecl> declarations;
     private IStmt statements;
+    private boolean hasProcedures;
 
     /**
      * Instantiates a new Module decl.
@@ -55,7 +56,14 @@ public final class ModuleDecl implements IDecl {
      * @param declaration the declaration
      */
     public void addDeclaration(IDecl declaration) {
+        if (declaration instanceof ProcedureDecl) {
+            hasProcedures = true;
+        }
         declarations.add(Objects.requireNonNull(declaration));
+    }
+
+    public boolean hasProcedures() {
+        return hasProcedures;
     }
 
     /**

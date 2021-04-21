@@ -2,14 +2,12 @@ package main.picl.interpreter;
 
 import main.parser.Environment;
 import main.parser.IParser;
+import main.parser.ISyntaxTree;
 import main.parser.IValue;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
-import main.picl.parser.LiteralValue;
-import main.picl.parser.MemoryAddressValue;
-import main.picl.parser.Parser;
-import main.picl.parser.SyntaxTree;
+import main.picl.parser.*;
 import main.picl.scanner.Token;
 
 import java.io.FileNotFoundException;
@@ -37,17 +35,10 @@ public class CodeGenerator implements IVisitor {
 
     private static final boolean THEN = true, END = false;
 
-    public static void main(String[] args) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get("./programs/RepeatStat.mod"));
-        IParser<INode> parser = new Parser(new String(bytes));
-        CodeGenerator generator = new CodeGenerator((SyntaxTree) parser.parse());
-        generator.generate();
-    }
-
     private int line;
     private int address; // TODO move to Environment
-    private final SyntaxTree ast;
-    private final Environment globals;
+    private final ISyntaxTree<INode> ast;
+    private Environment globals;
     private IValue stackTop;
     private final StringBuilder output;
     private Map<Integer, Boolean> gotoLocations;
@@ -58,10 +49,12 @@ public class CodeGenerator implements IVisitor {
     private boolean isClear;
     private boolean isDec;
     private boolean isSelfAssignment;
+    private boolean isReturn;
     private BinaryOperationConfiguration configuration;
     private final Deque<IValue> stack;
+    private final String fileName;
 
-    public CodeGenerator(SyntaxTree ast) {
+    public CodeGenerator(ISyntaxTree<INode> ast, String fileName) {
         address = 0xC;
         this.globals = new Environment();
         this.ast = Objects.requireNonNull(ast);
@@ -70,11 +63,12 @@ public class CodeGenerator implements IVisitor {
         // TODO put this elsewhere
         globals.add("A", new MemoryAddressValue(5, null));
         globals.add("B", new MemoryAddressValue(6, null));
+        this.fileName = fileName != null ? fileName : "a.out";
     }
 
     public void generate() {
         ast.getHead().accept(this);
-        try (PrintStream stream = new PrintStream(new FileOutputStream("a.out"))) {
+        try (PrintStream stream = new PrintStream(new FileOutputStream(fileName))) {
             stream.print(output);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -83,8 +77,17 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitModuleDeclaration(final ModuleDecl declaration) {
+        int pos = 0;
+        if (declaration.hasProcedures()) {
+            output.append(line++).append(" GOTO ");
+            pos = output.length();
+            output.append("\n");
+        }
         for (IDecl decl : declaration.getDeclarations()) {
             decl.accept(this);
+        }
+        if (declaration.hasProcedures()) {
+            output.insert(pos, line);
         }
         if (declaration.hasStatements()) {
             declaration.getStatements().accept(this);
@@ -102,12 +105,34 @@ public class CodeGenerator implements IVisitor {
         }
     }
 
+    // TODO Logan
     @Override
     public void visitProcedureDeclaration(final ProcedureDecl declaration) {
+        globals = new Environment(globals);
+        int start = line;
+        if(declaration.hasParameter()) {
+            output.append(line++).append(" MOVWF 1 ").append(address).append("\n");
+            declaration.getParameter().accept(this);
+        }
+        for (IDecl decl : declaration.getDeclarations()){
+            decl.accept(this);
+        }
+        if (declaration.hasStatements()) {
+            declaration.getStatements().accept(this);
+        }
+        if(declaration.hasReturnStatement()){
+            declaration.getReturnStatement().accept(this);
+        }
+        output.append(line++).append(" RET ").append("\n");
+        IValue procedure = new ProcedureValue(start, globals);
+        globals = globals.getParent();
+        globals.add(declaration.getIdentifier(), procedure);
     }
 
+    // TODO Logan
     @Override
     public void visitParameterDeclaration(final ParameterDecl declaration) {
+        globals.add(declaration.getIdentifier(), new MemoryAddressValue(address++, declaration.getType()));
     }
 
     @Override
@@ -228,8 +253,11 @@ public class CodeGenerator implements IVisitor {
         return null;
     }
 
+    // TODO Logan
     @Override
     public void visitReturnStatement(final ReturnStmt statement) {
+        statement.getExpression().accept(this);
+        output.append(line++).append(" MOVFW 0 ").append(stackTop.getPayload()).append("\n");
     }
 
     @Override
@@ -261,11 +289,12 @@ public class CodeGenerator implements IVisitor {
                 value = stackTop.getPayload();
                 mnemonic = " MOVFW 0 ";
             }
-            if (!isArithmetic) {
+            if (!isArithmetic && !isReturn) {
                 output.append(line++).append(mnemonic).append(value).append("\n");
             }
             output.append(line++).append(" MOVWF 1 ").append(left.getPayload()).append("\n");
             isArithmetic = false;
+            isReturn = false;
         }
     }
 
@@ -596,6 +625,7 @@ public class CodeGenerator implements IVisitor {
         }
         expression.getCallee().accept(this);
         output.append(line++).append(" CALL ").append(stackTop.getPayload()).append("\n");
+        isReturn = true;
     }
 
     @Override
@@ -604,7 +634,9 @@ public class CodeGenerator implements IVisitor {
         int register = stackTop.getPayload();
         expression.getIndex().accept(this);
         int bit = stackTop.getPayload();
-        output.append(bit).append(" ").append(register);
+        if (bit != 0) {
+            output.append(bit).append(" ").append(register);
+        }
     }
 
     @Override

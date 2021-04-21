@@ -8,12 +8,18 @@ import java.util.Map;
  */
 public final class Environment {
 
+    private final Environment parent;
     private final Map<String, IValue> symbols;
 
     /**
      * Instantiates a new Environment.
      */
     public Environment() {
+        this(null);
+    }
+
+    public Environment(Environment parent) {
+        this.parent = parent;
         symbols = new HashMap<>();
     }
 
@@ -34,7 +40,16 @@ public final class Environment {
      * @return the decl
      */
     public IValue get(String identifier) {
-        return symbols.get(identifier);
+        Environment currentScope = this;
+        IValue value;
+        do {
+            value = currentScope.symbols.get(identifier);
+            currentScope = currentScope.parent;
+        } while (currentScope != null && value == null);
+        return value; // TODO throw picl error for undefined variable
     }
 
+    public Environment getParent() {
+        return parent;
+    }
 }
