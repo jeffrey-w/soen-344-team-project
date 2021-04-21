@@ -212,7 +212,7 @@ public class CodeGenerator implements IVisitor {
         output.append(line++).append(" GOTO ").append(start).append("\n");
     }
 
-    private IExpr isRepeatSpecialCase(RepeatStmt stmt) {
+    private IExpr isRepeatSpecialCase(RepeatStmt stmt) { // TODO move to RepeatStmt
         if (stmt.getGuard() instanceof ComparisonExpr) {
             ComparisonExpr comparisonExpr = (ComparisonExpr) stmt.getGuard();
             if (comparisonExpr.getOperator() == EQL) {
