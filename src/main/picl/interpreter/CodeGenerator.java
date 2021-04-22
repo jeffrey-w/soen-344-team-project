@@ -89,7 +89,7 @@ public class CodeGenerator implements IVisitor {
         globals.add("A", new MemoryAddressValue(5, null));
         globals.add("B", new MemoryAddressValue(6, null));
     }
-
+    
     public void generate() {
         ast.getHead().accept(this);
         try (PrintStream stream = new PrintStream(new FileOutputStream(fileName))) {
@@ -162,6 +162,18 @@ public class CodeGenerator implements IVisitor {
             stmt.accept(this);
         }
     }
+    
+    private void revisitGotoLocations(Boolean ifStatement) {
+        int index = 0;
+        for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
+            int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
+            if (entry.getValue()) {
+                output.insert(conditionalPos, ifStatement ? line : line - 1);
+            } else {
+                output.insert(conditionalPos, line + 1);
+            }
+        }
+    }
 
     @Override
     public void visitIfStatement(final IfStmt statement) {
@@ -174,16 +186,9 @@ public class CodeGenerator implements IVisitor {
             // ELSE token will not have a key therefore only evaluate the value
             if (expression != null) {
                 evaluateGuard(expression);
-                int pos = writeGoto() + (gotoLocations.isEmpty() ? 0 : 4), index = 0;
+                int pos = writeGoto() + (gotoLocations.isEmpty() ? 0 : 4);
                 newLine();
-                for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
-                    int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
-                    if (entry.getValue()) {
-                        output.insert(conditionalPos, line);
-                    } else {
-                        output.insert(conditionalPos, line + 1);
-                    }
-                }
+                revisitGotoLocations(true);
                 guardedStatement.getValue().accept(this);
                 // For every ELSEIF statement we nee to add a GOTO at the end to point to the
                 // end of the IF statement
@@ -217,15 +222,7 @@ public class CodeGenerator implements IVisitor {
             newLine();
             guardedStatement.getValue().accept(this);
             output.insert(pos, line + 1);
-            int index = 0;
-            for (Entry<Integer, Boolean> entry : gotoLocations.entrySet()) {
-                int conditionalPos = entry.getKey() + index++ * gotoLocations.size();
-                if (entry.getValue()) {
-                    output.insert(conditionalPos, line - 1);
-                } else {
-                    output.insert(conditionalPos, line + 1);
-                }
-            }
+            revisitGotoLocations(false);
         }
         writeLine("GOTO " + start);
     }
