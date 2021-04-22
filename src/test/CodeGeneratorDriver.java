@@ -20,6 +20,7 @@ public class CodeGeneratorDriver {
         if (programs != null) {
             char letter = 'a';
             for (File program : programs) {
+                System.out.println(program);
                 run(program.getPath(), letter++ + ".out");
             }
         }
