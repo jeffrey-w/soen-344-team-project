@@ -20,6 +20,16 @@ import java.util.Map.Entry;
 import static main.picl.scanner.Token.TokenType.*;
 
 public class CodeGenerator implements IVisitor {
+    private static class Flag {
+        private boolean isGuard;
+        private boolean isAssignment;
+        private boolean isArithmetic;
+        private boolean isDecrement;
+        private boolean isSelfAssignment;
+        private boolean isReturn;
+        private boolean isNot;
+    }
+
 
     private enum ArithmeticOperationConfiguration {
         LITERAL_LITERAL,
@@ -66,14 +76,10 @@ public class CodeGenerator implements IVisitor {
     private final ISyntaxTree<INode> ast;
     private Environment globals;
     private IValue result;
+    private Flag flags;
     private final StringBuilder output;
     private Map<Integer, Boolean> gotoLocations;
-    private boolean isGuard;
-    private boolean isAssignment;
-    private boolean isArithmetic;
-    private boolean isDecrement;
-    private boolean isSelfAssignment;
-    private boolean isReturn;
+    
     private final String fileName;
 
     public CodeGenerator(ISyntaxTree<INode> ast, String fileName) {
@@ -216,7 +222,7 @@ public class CodeGenerator implements IVisitor {
         int start = this.line;
         while (statementIterator.hasNext()) {
             Entry<IExpr, IStmt> guardedStatement = statementIterator.next();
-            isSelfAssignment = false;
+            flags.isSelfAssignment = false;
             evaluateGuard(guardedStatement.getKey());
             int pos = writeGoto();
             newLine();
@@ -225,6 +231,7 @@ public class CodeGenerator implements IVisitor {
             revisitGotoLocations(false);
         }
         writeLine("GOTO " + start);
+        newLine();
     }
 
     @Override
@@ -233,7 +240,7 @@ public class CodeGenerator implements IVisitor {
         statement.getStatements().accept(this);
         if (statement.hasGuard()) {
             IExpr variable;
-            if ((variable = statement.isSpecial(isDecrement)) != null) {
+            if ((variable = statement.isSpecial(flags.isDecrement)) != null) {
                 output.delete(output.lastIndexOf("DECF"), output.length());
                 variable.accept(this);
                 write("DECFSZ 1 " + result.getPayload());
@@ -254,20 +261,20 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitExpressionStatement(final ExpressionStmt statement) {
         statement.getExpression().accept(this);
-        isDecrement = statement.getExpression() instanceof UnaryExpr
+        flags.isDecrement = statement.getExpression() instanceof UnaryExpr
                 && ((UnaryExpr) statement.getExpression()).getOperator() == DEC;
     }
 
     @Override
     public void visitAssignmentExpression(AssignmentExpr expression) {
-        isAssignment = true;
+        flags.isAssignment = true;
         expression.getLeft().accept(this);
         IValue left = result;
         expression.getRight().accept(this);
-        if (isAssignment) {
+        if (flags.isAssignment) {
             int value;
             String mnemonic;
-            if (result instanceof LiteralValue && !isArithmetic) {
+            if (result.isImmediate() && !flags.isArithmetic) {
                 if (result.getPayload() == 0) {
                     expression.getLeft().accept(this);
                     writeLine("CLRF 1 " + result.getPayload());
@@ -280,12 +287,12 @@ public class CodeGenerator implements IVisitor {
                 value = result.getPayload();
                 mnemonic = "MOVFW 0 ";
             }
-            if (!isArithmetic && !isReturn) {
+            if (!flags.isArithmetic && !flags.isReturn) {
                 writeLine(mnemonic + value);
             }
             writeLine("MOVFW 1 " + left.getPayload());
-            isArithmetic = false;
-            isReturn = false;
+            flags.isArithmetic = false;
+            flags.isReturn = false;
         }
     }
 
@@ -303,8 +310,8 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitComparisonExpression(ComparisonExpr expression) {
-        boolean wasGuard = isGuard;
-        isGuard = false;
+        boolean wasGuard = flags.isGuard;
+        flags.isGuard = false;
         String test = null;
         IValue first = null;
         Enum<?> operator = expression.getOperator();
@@ -339,17 +346,17 @@ public class CodeGenerator implements IVisitor {
             first = result;
             expression.getLeft().accept(this);
         }
-        isGuard = wasGuard;
-        if (first instanceof LiteralValue) {
+        flags.isGuard = wasGuard;
+        if (first.isImmediate()) {
             writeLine("MOVFW 0 " + result.getPayload());
-            if (!(result instanceof LiteralValue && result.getPayload() == 0) && !isSelfAssignment) {
+            if (!(result.isImmediate() && result.getPayload() == 0) && !flags.isSelfAssignment) {
                 writeLine("SUBFW 0" + first.getPayload());
             }
             writeLine(test);
         } else {
             if (test != null && first != null) {
                 writeLine("MOVFW 0 " + first.getPayload());
-                if (!(result instanceof LiteralValue && result.getPayload() == 0) && !isSelfAssignment) {
+                if (!(result.isImmediate() && result.getPayload() == 0) && !flags.isSelfAssignment) {
                     writeLine("SUBFW 0 " + result.getPayload());
                 }
                 writeLine(test);
@@ -366,9 +373,9 @@ public class CodeGenerator implements IVisitor {
         IValue left = result;
         expression.getRight().accept(this);
         IValue right = result;
-        isSelfAssignment = isSelfAssignment(previous, left);
-        isArithmetic = true;
-        int d = isSelfAssignment ? 1 : 0;
+        flags.isSelfAssignment = isSelfAssignment(previous, left);
+        flags.isArithmetic = true;
+        int d = flags.isSelfAssignment ? 1 : 0;
         switch (configurationOf(left, right)) {
             case LITERAL_LITERAL:
                 // TODO
@@ -429,11 +436,11 @@ public class CodeGenerator implements IVisitor {
                 }
                 break;
         }
-        isAssignment = !isSelfAssignment;
+        flags.isAssignment = !flags.isSelfAssignment;
     }
 
     private boolean isSelfAssignment(IValue previous, IValue left) {
-        return isAssignment && (left instanceof MemoryAddressValue && left.getPayload() == previous.getPayload());
+        return flags.isAssignment && (left.isAddress() && left.getPayload() == previous.getPayload());
     }
 
     @Override
@@ -472,8 +479,10 @@ public class CodeGenerator implements IVisitor {
                 }
                 break;
             case NOT:
+                flags.isNot = true;
                 expression.getOperand().accept(this); // Maybe variable or get
-                if (!(expression.getOperand() instanceof GetExpr) && !isGuard) { // TODO check for isGuard elsewhere
+                flags.isNot = false;
+                if (!(expression.getOperand() instanceof GetExpr) && !flags.isGuard) { // TODO check for isGuard elsewhere
                     output.append(0 + " ").append(result.getPayload()).append("\n");
                 } else {
                     output.append("\n");
@@ -522,7 +531,7 @@ public class CodeGenerator implements IVisitor {
         }
         expression.getCallee().accept(this);
         output.append(line++).append(" CALL ").append(result.getPayload()).append("\n");
-        isReturn = true;
+        flags.isReturn = true;
     }
 
     @Override
@@ -539,8 +548,13 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitVariableExpression(final VariableExpr expression) {
         result = globals.get((String) expression.getIdentifier().getValue());
-        if (isGuard) {
-            output.append(line++).append(" BTFSS 0 ").append(result.getPayload()).append("\n");
+        if (flags.isGuard) {
+            if(flags.isNot){
+                output.append(line++).append(" BTFSC 0 ").append(result.getPayload());
+            }
+            else{
+                output.append(line++).append(" BTFSS 0 ").append(result.getPayload()).append("\n");
+            }
         }
     }
 
@@ -566,9 +580,9 @@ public class CodeGenerator implements IVisitor {
     }
 
     private void evaluateGuard(IExpr guard) {
-        isGuard = true;
+        flags.isGuard = true;
         guard.accept(this);
-        isGuard = false;
+        flags.isGuard = false;
     }
 
 }

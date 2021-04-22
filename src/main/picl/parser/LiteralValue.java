@@ -14,4 +14,17 @@ public final class LiteralValue extends AbstractValue {
         return payload;
     }
 
+    @Override
+    public boolean isImmediate() {
+        // TODO Auto-generated method stub
+        return true;
+    }
+
+    @Override
+    public boolean isAddress() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+
 }

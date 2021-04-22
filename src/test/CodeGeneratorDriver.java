@@ -18,10 +18,10 @@ public class CodeGeneratorDriver {
         File programDirectory = new File("./programs");
         File[] programs = programDirectory.listFiles();
         if (programs != null) {
-            char letter = 'a';
             for (File program : programs) {
-                System.out.println(program);
-                run(program.getPath(), letter++ + ".out");
+                String fileName = program.getName().replace(".mod", "");
+                System.out.println(fileName);
+                run(program.getPath(), fileName + ".out");
             }
         }
     }
