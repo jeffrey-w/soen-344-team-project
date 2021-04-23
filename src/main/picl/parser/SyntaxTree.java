@@ -1,6 +1,6 @@
 package main.picl.parser;
 
-import main.parser.ISyntaxTree;
+import main.picl.interpreter.parser.ISyntaxTree;
 import main.picl.interpreter.INode;
 
 /**

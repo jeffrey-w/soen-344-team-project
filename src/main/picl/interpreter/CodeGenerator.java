@@ -1,14 +1,14 @@
 package main.picl.interpreter;
 
-import main.parser.Environment;
-import main.parser.ISyntaxTree;
-import main.parser.IValue;
+import main.interpreter.Environment;
+import main.picl.interpreter.parser.ISyntaxTree;
+import main.interpreter.IValue;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
-import main.picl.parser.LiteralValue;
-import main.picl.parser.MemoryAddressValue;
-import main.picl.parser.ProcedureValue;
+import main.picl.interpreter.values.LiteralValue;
+import main.picl.interpreter.values.MemoryAddressValue;
+import main.picl.interpreter.values.ProcedureValue;
 import main.picl.scanner.Token;
 
 import java.io.FileNotFoundException;

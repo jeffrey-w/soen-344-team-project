@@ -1,7 +1,7 @@
 package main.picl.parser;
 
-import main.parser.IParser;
-import main.parser.ISyntaxTree;
+import main.picl.interpreter.parser.IParser;
+import main.picl.interpreter.parser.ISyntaxTree;
 import main.picl.interpreter.INode;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;

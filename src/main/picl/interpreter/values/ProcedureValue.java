@@ -1,14 +1,14 @@
-package main.picl.parser;
+package main.picl.interpreter.values;
 
-public final class LiteralValue extends AbstractValue {
+public class ProcedureValue extends AbstractValue {
 
-    public LiteralValue(int payload) {
+    public ProcedureValue(final int payload) {
         super(payload);
     }
 
     @Override
-    int validatePayload(int payload) {
-        if (payload < 0 || payload >= 0x100) {
+    int validatePayload(final int payload) {
+        if (payload < 1) {
             throw new Error(); // TODO need picl error
         }
         return payload;
@@ -17,7 +17,7 @@ public final class LiteralValue extends AbstractValue {
     @Override
     public boolean isImmediate() {
         // TODO Auto-generated method stub
-        return true;
+        return false;
     }
 
     @Override
@@ -25,6 +25,5 @@ public final class LiteralValue extends AbstractValue {
         // TODO Auto-generated method stub
         return false;
     }
-    
 
 }

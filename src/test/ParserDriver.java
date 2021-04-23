@@ -1,6 +1,6 @@
 package test;
 
-import main.parser.IParser;
+import main.picl.interpreter.parser.IParser;
 import main.picl.interpreter.PrettyPrinter;
 import main.picl.parser.Parser;
 

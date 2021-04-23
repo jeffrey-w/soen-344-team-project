@@ -1,5 +1,5 @@
 main.errors
-main.parser
+main.picl.interpreter.parser
 main.picl.interpreter
 main.picl.interpreter.decl
 main.picl.interpreter.expr

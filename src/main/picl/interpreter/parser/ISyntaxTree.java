@@ -1,4 +1,4 @@
-package main.parser;
+package main.picl.interpreter.parser;
 
 /**
  * The {@code ISyntaxTree} interface specifies the operations on an intermediate representation of a source code string.

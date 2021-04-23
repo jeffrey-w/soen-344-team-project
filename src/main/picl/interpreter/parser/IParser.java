@@ -1,4 +1,4 @@
-package main.parser;
+package main.picl.interpreter.parser;
 
 /**
  * The {@code Parser} interface specifies the operations for recovering a {@code ISyntaxTree} from a string

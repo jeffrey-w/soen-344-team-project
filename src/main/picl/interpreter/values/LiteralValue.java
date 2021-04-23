@@ -1,36 +1,30 @@
-package main.picl.parser;
+package main.picl.interpreter.values;
 
-public final class MemoryAddressValue extends AbstractValue {
+public final class LiteralValue extends AbstractValue {
 
-    private final Enum<?> type;
-
-    public MemoryAddressValue(int payload, Enum<?> type) {
+    public LiteralValue(int payload) {
         super(payload);
-        this.type = type; // TODO validate this
     }
 
     @Override
     int validatePayload(int payload) {
-        if (payload < 0x5 || payload >= 0x40) {
+        if (payload < 0 || payload >= 0x100) {
             throw new Error(); // TODO need picl error
         }
         return payload;
     }
 
-    public Enum<?> getType() {
-        return type;
-    }
-
     @Override
     public boolean isImmediate() {
         // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAddress() {
         // TODO Auto-generated method stub
-        return true;
+        return false;
     }
     
+
 }

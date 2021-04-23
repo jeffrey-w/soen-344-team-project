@@ -1,6 +1,6 @@
-package main.picl.parser;
+package main.picl.interpreter.values;
 
-import main.parser.IValue;
+import main.interpreter.IValue;
 
 abstract class AbstractValue implements IValue {
     

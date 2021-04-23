@@ -1,4 +1,4 @@
-package main.parser;
+package main.interpreter;
 
 public interface IValue {
 
