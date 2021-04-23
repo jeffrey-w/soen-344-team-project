@@ -461,7 +461,7 @@ public final class CodeGenerator implements IVisitor {
                         newLine();
                     }
                 }
-                writeLine("GOTO " + (line - 2));
+                writeLine("GOTO " + (line -1));
                 break;
             case OP:
                 if (isClear = expression.hasUnaryNot()) {
