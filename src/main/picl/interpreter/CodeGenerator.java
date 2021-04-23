@@ -6,8 +6,8 @@ import main.interpreter.IValue;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;
-import main.picl.interpreter.values.LiteralValue;
-import main.picl.interpreter.values.MemoryAddressValue;
+import main.picl.interpreter.values.ImmediateValue;
+import main.picl.interpreter.values.AddressValue;
 import main.picl.interpreter.values.ProcedureValue;
 import main.picl.scanner.Token;
 
@@ -42,19 +42,19 @@ public class CodeGenerator implements IVisitor {
     }
 
     private static ArithmeticOperationConfiguration configurationOf(IValue left, IValue right) {
-        if (left instanceof LiteralValue && right instanceof LiteralValue) {
+        if (left instanceof ImmediateValue && right instanceof ImmediateValue) {
             return ArithmeticOperationConfiguration.LITERAL_LITERAL;
         }
-        if (left instanceof LiteralValue) {
-            MemoryAddressValue addressValue = (MemoryAddressValue) right;
+        if (left instanceof ImmediateValue) {
+            AddressValue addressValue = (AddressValue) right;
             if (addressValue.getType() == INT) {
                 return ArithmeticOperationConfiguration.LITERAL_VARIABLE_INT;
             } else {
                 return ArithmeticOperationConfiguration.LITERAL_VARIABLE_SET;
             }
         }
-        MemoryAddressValue addressValue = (MemoryAddressValue) left;
-        if (right instanceof LiteralValue) {
+        AddressValue addressValue = (AddressValue) left;
+        if (right instanceof ImmediateValue) {
             if (addressValue.getType() == INT) {
                 return ArithmeticOperationConfiguration.VARIABLE_LITERAL_INT;
             } else {
@@ -92,8 +92,8 @@ public class CodeGenerator implements IVisitor {
     }
 
     private void addPorts() {
-        globals.add("A", new MemoryAddressValue(5, null));
-        globals.add("B", new MemoryAddressValue(6, null));
+        globals.add("A", new AddressValue(5, null));
+        globals.add("B", new AddressValue(6, null));
     }
     
     public void generate() {
@@ -127,9 +127,9 @@ public class CodeGenerator implements IVisitor {
     public void visitVariableDeclaration(final VariableDecl declaration) {
         for (String identifier : declaration) {
             if (declaration.isConst()) {
-                globals.add(identifier, new LiteralValue(declaration.get(identifier)));
+                globals.add(identifier, new ImmediateValue(declaration.get(identifier)));
             } else {
-                globals.add(identifier, new MemoryAddressValue(address++, declaration.getType()));
+                globals.add(identifier, new AddressValue(address++, declaration.getType()));
             }
         }
     }
@@ -159,7 +159,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitParameterDeclaration(final ParameterDecl declaration) {
-        globals.add(declaration.getIdentifier(), new MemoryAddressValue(address++, declaration.getType()));
+        globals.add(declaration.getIdentifier(), new AddressValue(address++, declaration.getType()));
     }
 
     @Override
@@ -560,7 +560,7 @@ public class CodeGenerator implements IVisitor {
 
     @Override
     public void visitLiteralExpression(final LiteralExpr expression) {
-        result = new LiteralValue(expression.getValue());
+        result = new ImmediateValue(expression.getValue());
     }
 
     private void writeLine(String line) {

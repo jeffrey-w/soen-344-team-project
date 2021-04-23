@@ -1,10 +1,10 @@
 package main.picl.interpreter.values;
 
-public final class MemoryAddressValue extends AbstractValue {
+public final class AddressValue extends AbstractValue {
 
     private final Enum<?> type;
 
-    public MemoryAddressValue(int payload, Enum<?> type) {
+    public AddressValue(int payload, Enum<?> type) {
         super(payload);
         this.type = type; // TODO validate this
     }
@@ -23,13 +23,11 @@ public final class MemoryAddressValue extends AbstractValue {
 
     @Override
     public boolean isImmediate() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isAddress() {
-        // TODO Auto-generated method stub
         return true;
     }
     

@@ -1,8 +1,8 @@
 package main.picl.interpreter.values;
 
-public final class LiteralValue extends AbstractValue {
+public final class ImmediateValue extends AbstractValue {
 
-    public LiteralValue(int payload) {
+    public ImmediateValue(int payload) {
         super(payload);
     }
 
@@ -16,13 +16,11 @@ public final class LiteralValue extends AbstractValue {
 
     @Override
     public boolean isImmediate() {
-        // TODO Auto-generated method stub
         return true;
     }
 
     @Override
     public boolean isAddress() {
-        // TODO Auto-generated method stub
         return false;
     }
     
