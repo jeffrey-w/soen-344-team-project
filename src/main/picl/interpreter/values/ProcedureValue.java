@@ -2,8 +2,16 @@ package main.picl.interpreter.values;
 
 import main.picl.scanner.Token;
 
+/**
+ * The type Procedure value.
+ */
 public final class ProcedureValue extends AbstractValue {
 
+    /**
+     * Instantiates a new Procedure value.
+     *
+     * @param payload the payload
+     */
     public ProcedureValue(final int payload) {
         super(payload);
     }

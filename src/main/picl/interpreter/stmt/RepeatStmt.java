@@ -57,6 +57,12 @@ public final class RepeatStmt implements IStmt {
         visitor.visitRepeatStatement(this);
     }
 
+    /**
+     * Is special expr.
+     *
+     * @param isDecrement the is decrement
+     * @return the expr
+     */
     public IExpr isSpecial(boolean isDecrement) {
         if (isDecrement) {
             if (hasGuard() && guard instanceof ComparisonExpr) {

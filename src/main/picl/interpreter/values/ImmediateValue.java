@@ -2,8 +2,16 @@ package main.picl.interpreter.values;
 
 import main.picl.scanner.Token;
 
+/**
+ * The type Immediate value.
+ */
 public final class ImmediateValue extends AbstractValue {
 
+    /**
+     * Instantiates a new Immediate value.
+     *
+     * @param payload the payload
+     */
     public ImmediateValue(int payload) {
         super(payload);
     }

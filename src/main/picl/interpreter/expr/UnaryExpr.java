@@ -51,10 +51,20 @@ public final class UnaryExpr implements IExpr {
         return operator == Token.TokenType.DEC;
     }
 
+    /**
+     * Has get boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasGet() {
         return operand instanceof GetExpr;
     }
 
+    /**
+     * Has unary not boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasUnaryNot() {
         return operand instanceof UnaryExpr && ((UnaryExpr) operand).getOperator() == Token.TokenType.NOT;
     }
