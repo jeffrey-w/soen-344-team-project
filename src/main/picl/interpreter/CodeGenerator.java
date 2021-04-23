@@ -19,6 +19,9 @@ import java.util.Map.Entry;
 
 import static main.picl.scanner.Token.TokenType.*;
 
+/**
+ * The type Code generator.
+ */
 public final class CodeGenerator implements IVisitor {
 
     private static class Flags {
@@ -35,12 +38,33 @@ public final class CodeGenerator implements IVisitor {
 
 
     private enum BinaryOpConfiguration {
+        /**
+         * Literal literal binary op configuration.
+         */
         LITERAL_LITERAL,
+        /**
+         * Literal variable int binary op configuration.
+         */
         LITERAL_VARIABLE_INT,
+        /**
+         * Literal variable set binary op configuration.
+         */
         LITERAL_VARIABLE_SET,
+        /**
+         * Variable literal int binary op configuration.
+         */
         VARIABLE_LITERAL_INT,
+        /**
+         * Variable literal set binary op configuration.
+         */
         VARIABLE_LITERAL_SET,
+        /**
+         * Variable variable int binary op configuration.
+         */
         VARIABLE_VARIABLE_INT,
+        /**
+         * Variable variable set binary op configuration.
+         */
         VARIABLE_VARIABLE_SET
     }
 
@@ -82,6 +106,12 @@ public final class CodeGenerator implements IVisitor {
     private final StringBuilder output;
     private final String fileName;
 
+    /**
+     * Instantiates a new Code generator.
+     *
+     * @param ast      the ast
+     * @param fileName the file name
+     */
     public CodeGenerator(ISyntaxTree<INode> ast, String fileName) {
         address = 0xC;
         globals = new Environment();
@@ -96,7 +126,10 @@ public final class CodeGenerator implements IVisitor {
         globals.add("A", new AddressValue(5, null));
         globals.add("B", new AddressValue(6, null));
     }
-    
+
+    /**
+     * Generate.
+     */
     public void generate() {
         ast.getHead().accept(this);
         try (PrintStream stream = new PrintStream(new FileOutputStream(fileName))) {

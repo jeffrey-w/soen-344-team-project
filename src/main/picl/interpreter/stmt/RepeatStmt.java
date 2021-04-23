@@ -17,7 +17,7 @@ public final class RepeatStmt implements IStmt {
     /**
      * Instantiates a new Repeat stmt.
      *
-     * @param guard the guard
+     * @param guard      the guard
      * @param statements the statements
      */
     public RepeatStmt(IExpr guard, IStmt statements) {
@@ -57,6 +57,12 @@ public final class RepeatStmt implements IStmt {
         visitor.visitRepeatStatement(this);
     }
 
+    /**
+     * Is special expr.
+     *
+     * @param isDecrement the is decrement
+     * @return the expr
+     */
     public IExpr isSpecial(boolean isDecrement) {
         if (isDecrement) {
             if (hasGuard() && guard instanceof ComparisonExpr) {

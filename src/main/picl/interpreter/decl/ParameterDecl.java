@@ -14,7 +14,7 @@ public final class ParameterDecl implements IDecl {
     /**
      * Instantiates a new Parameter decl.
      *
-     * @param token the token
+     * @param token      the token
      * @param identifier the identifier
      */
     public ParameterDecl(IToken token, IToken identifier) {

@@ -62,6 +62,11 @@ public final class ModuleDecl implements IDecl {
         declarations.add(Objects.requireNonNull(declaration));
     }
 
+    /**
+     * Has procedures boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasProcedures() {
         return hasProcedures;
     }

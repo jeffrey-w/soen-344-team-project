@@ -1,9 +1,11 @@
 main.errors
-main.picl.interpreter.parser
+main.interpreter
 main.picl.interpreter
 main.picl.interpreter.decl
 main.picl.interpreter.expr
+main.picl.interpreter.parser
 main.picl.interpreter.stmt
+main.picl.interpreter.values
 main.picl.parser
 main.picl.scanner
 main.scanner

@@ -15,7 +15,7 @@ public final class Error {
     /**
      * Instantiates a new Error.
      *
-     * @param message the message
+     * @param message  the message
      * @param position the position
      */
     public Error(String message, Position position) {

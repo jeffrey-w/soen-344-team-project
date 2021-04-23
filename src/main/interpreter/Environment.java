@@ -18,6 +18,11 @@ public final class Environment {
         this(null);
     }
 
+    /**
+     * Instantiates a new Environment.
+     *
+     * @param parent the parent
+     */
     public Environment(Environment parent) {
         this.parent = parent;
         symbols = new HashMap<>();
@@ -27,7 +32,7 @@ public final class Environment {
      * Add.
      *
      * @param identifier the identifier
-     * @param info the info
+     * @param info       the info
      */
     public void add(String identifier, IValue info) {
         symbols.put(identifier, info);
@@ -49,6 +54,11 @@ public final class Environment {
         return value; // TODO throw error for undefined variable
     }
 
+    /**
+     * Gets parent.
+     *
+     * @return the parent
+     */
     public Environment getParent() {
         return parent;
     }

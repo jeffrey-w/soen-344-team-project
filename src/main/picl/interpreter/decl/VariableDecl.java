@@ -29,7 +29,7 @@ public final class VariableDecl implements IDecl, Iterable<String> {
      * Add.
      *
      * @param identifier the identifier
-     * @param value the value
+     * @param value      the value
      */
     public void add(IToken identifier, IToken value) {
         variables.put((String) identifier.getValue(), value == null ? null : (Integer) value.getValue());
