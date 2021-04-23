@@ -16,8 +16,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+/**
+ * The type Code generator.
+ */
 public class CodeGenerator implements IVisitor {
 
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     * @throws IOException the io exception
+     */
     public static void main(String[] args) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get("./programs/Assignments.mod"));
         IParser parser = new Parser(new String(bytes));
@@ -32,12 +41,21 @@ public class CodeGenerator implements IVisitor {
     private Object stackTop;
     private PrintWriter stream;
 
+    /**
+     * Instantiates a new Code generator.
+     *
+     * @param ast the ast
+     * @throws FileNotFoundException the file not found exception
+     */
     public CodeGenerator(SyntaxTree ast) throws FileNotFoundException {
         this.globals = new Environment();
         this.ast = Objects.requireNonNull(ast);
         stream = new PrintWriter(new FileOutputStream("a.out"));
     }
 
+    /**
+     * Generate.
+     */
     public void generate() {
         ast.getHead().accept(this);
         stream.close();

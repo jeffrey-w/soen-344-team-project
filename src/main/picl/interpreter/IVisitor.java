@@ -82,12 +82,32 @@ public interface IVisitor {
      */
     void visitExpressionStatement(ExpressionStmt statement);
 
+    /**
+     * Visit assignment expression.
+     *
+     * @param expression the expression
+     */
     void visitAssignmentExpression(AssignmentExpr expression);
 
+    /**
+     * Visit logical expression.
+     *
+     * @param expression the expression
+     */
     void visitLogicalExpression(LogicalExpr expression);
 
+    /**
+     * Visit comparison expression.
+     *
+     * @param expression the expression
+     */
     void visitComparisonExpression(ComparisonExpr expression);
 
+    /**
+     * Visit arithmetic expression.
+     *
+     * @param expression the expression
+     */
     void visitArithmeticExpression(ArithmeticExpr expression);
 
     /**

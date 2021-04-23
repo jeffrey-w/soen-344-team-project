@@ -15,7 +15,7 @@ public final class UnaryExpr implements IExpr {
      * Instantiates a new Unary expr.
      *
      * @param operator the operator
-     * @param operand the operand
+     * @param operand  the operand
      */
     public UnaryExpr(IToken operator, IExpr operand) {
         this.operand = operand;

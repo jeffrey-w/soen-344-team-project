@@ -11,6 +11,13 @@ public abstract class BinaryExpr implements IExpr {
     private final IExpr right;
     private final Enum<?> operator;
 
+    /**
+     * Validate operator token.
+     *
+     * @param operator   the operator
+     * @param validTypes the valid types
+     * @return the token
+     */
     static IToken validateOperator(IToken operator, Enum<?>... validTypes) {
         for (Enum<?> type : validTypes) {
             if (operator.getType() == type) {
@@ -24,8 +31,8 @@ public abstract class BinaryExpr implements IExpr {
     /**
      * Instantiates a new Binary expr.
      *
-     * @param left the left
-     * @param right the right
+     * @param left     the left
+     * @param right    the right
      * @param operator the operator
      */
     public BinaryExpr(IExpr left, IExpr right, IToken operator) {

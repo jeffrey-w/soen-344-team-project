@@ -8,10 +8,25 @@ import java.util.Map;
  */
 public final class Environment {
 
+    /**
+     * The type Entry info.
+     */
     public static class EntryInfo {
+        /**
+         * The Type.
+         */
         public Enum<?> type;
+        /**
+         * The Value.
+         */
         public int value;
 
+        /**
+         * Instantiates a new Entry info.
+         *
+         * @param type  the type
+         * @param value the value
+         */
         public EntryInfo(Enum<?> type, int value) {
             this.type = type;
             this.value = value;
@@ -32,7 +47,7 @@ public final class Environment {
      * Add.
      *
      * @param identifier the identifier
-     * @param info the info
+     * @param info       the info
      */
     public void add(String identifier, EntryInfo info) {
         symbols.put(identifier, info);

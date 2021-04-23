@@ -13,7 +13,7 @@ public final class GetExpr implements IExpr {
     /**
      * Instantiates a new Get expr.
      *
-     * @param left the left
+     * @param left  the left
      * @param index the index
      */
     public GetExpr(IExpr left, IExpr index) {

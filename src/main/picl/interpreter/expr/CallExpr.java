@@ -13,7 +13,7 @@ public final class CallExpr implements IExpr {
     /**
      * Instantiates a new Call expr.
      *
-     * @param callee the callee
+     * @param callee   the callee
      * @param argument the argument
      */
     public CallExpr(IExpr callee, IExpr argument) {

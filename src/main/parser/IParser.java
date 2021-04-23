@@ -10,7 +10,7 @@ public interface IParser<T> {
 
     /**
      * Provides the {@code ISyntaxTree} derived, according to some grammar, from a string provided to this {@code
-     * IParser}.
+     * IParser}**.
      *
      * @return the tree representation of a string supplied to this {@code IParser}
      */
