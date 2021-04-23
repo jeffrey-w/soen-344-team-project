@@ -17,6 +17,7 @@ public final class AddressValue extends AbstractValue {
         return payload;
     }
 
+    @Override
     public Enum<?> getType() {
         return type;
     }

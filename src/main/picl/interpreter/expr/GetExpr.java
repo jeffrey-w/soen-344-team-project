@@ -44,4 +44,9 @@ public final class GetExpr implements IExpr {
         visitor.visitGetExpression(this);
     }
 
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

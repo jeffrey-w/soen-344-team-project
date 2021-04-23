@@ -19,19 +19,22 @@ import java.util.Map.Entry;
 
 import static main.picl.scanner.Token.TokenType.*;
 
-public class CodeGenerator implements IVisitor {
-    private static class Flag {
+public final class CodeGenerator implements IVisitor {
+
+    private static class Flags {
+
+        private boolean isReturn;
         private boolean isGuard;
+        private boolean isNot;
         private boolean isAssignment;
+        private boolean isSelfAssignment;
         private boolean isArithmetic;
         private boolean isDecrement;
-        private boolean isSelfAssignment;
-        private boolean isReturn;
-        private boolean isNot;
+
     }
 
 
-    private enum ArithmeticOperationConfiguration {
+    private enum BinaryOpConfiguration {
         LITERAL_LITERAL,
         LITERAL_VARIABLE_INT,
         LITERAL_VARIABLE_SET,
@@ -41,30 +44,28 @@ public class CodeGenerator implements IVisitor {
         VARIABLE_VARIABLE_SET
     }
 
-    private static ArithmeticOperationConfiguration configurationOf(IValue left, IValue right) {
-        if (left instanceof ImmediateValue && right instanceof ImmediateValue) {
-            return ArithmeticOperationConfiguration.LITERAL_LITERAL;
+    private static BinaryOpConfiguration configurationOf(IValue left, IValue right) {
+        if (left.isImmediate() && right.isImmediate()) {
+            return BinaryOpConfiguration.LITERAL_LITERAL;
         }
-        if (left instanceof ImmediateValue) {
-            AddressValue addressValue = (AddressValue) right;
-            if (addressValue.getType() == INT) {
-                return ArithmeticOperationConfiguration.LITERAL_VARIABLE_INT;
+        if (left.isImmediate()) {
+            if (right.getType() == INT) {
+                return BinaryOpConfiguration.LITERAL_VARIABLE_INT;
             } else {
-                return ArithmeticOperationConfiguration.LITERAL_VARIABLE_SET;
+                return BinaryOpConfiguration.LITERAL_VARIABLE_SET;
             }
         }
-        AddressValue addressValue = (AddressValue) left;
-        if (right instanceof ImmediateValue) {
-            if (addressValue.getType() == INT) {
-                return ArithmeticOperationConfiguration.VARIABLE_LITERAL_INT;
+        if (right.isImmediate()) {
+            if (left.getType() == INT) {
+                return BinaryOpConfiguration.VARIABLE_LITERAL_INT;
             } else {
-                return ArithmeticOperationConfiguration.VARIABLE_LITERAL_SET;
+                return BinaryOpConfiguration.VARIABLE_LITERAL_SET;
             }
         } else {
-            if (addressValue.getType() == INT) {
-                return ArithmeticOperationConfiguration.VARIABLE_VARIABLE_INT;
+            if (left.getType() == INT) {
+                return BinaryOpConfiguration.VARIABLE_VARIABLE_INT;
             } else {
-                return ArithmeticOperationConfiguration.VARIABLE_VARIABLE_SET;
+                return BinaryOpConfiguration.VARIABLE_VARIABLE_SET;
             }
         }
     }
@@ -72,23 +73,23 @@ public class CodeGenerator implements IVisitor {
     private static final boolean THEN = true, END = false;
 
     private int line;
-    private int address; // TODO move to Environment
-    private final ISyntaxTree<INode> ast;
+    private int address;
     private Environment globals;
     private IValue result;
-    private Flag flags;
-    private final StringBuilder output;
+    private final Flags flags;
     private Map<Integer, Boolean> gotoLocations;
-    
+    private final ISyntaxTree<INode> ast;
+    private final StringBuilder output;
     private final String fileName;
 
     public CodeGenerator(ISyntaxTree<INode> ast, String fileName) {
         address = 0xC;
-        this.globals = new Environment();
+        globals = new Environment();
+        flags = new Flags();
         this.ast = Objects.requireNonNull(ast);
         output = new StringBuilder();
-        addPorts();
         this.fileName = fileName != null ? fileName : "a.out";
+        addPorts();
     }
 
     private void addPorts() {
@@ -261,8 +262,7 @@ public class CodeGenerator implements IVisitor {
     @Override
     public void visitExpressionStatement(final ExpressionStmt statement) {
         statement.getExpression().accept(this);
-        flags.isDecrement = statement.getExpression() instanceof UnaryExpr
-                && ((UnaryExpr) statement.getExpression()).getOperator() == DEC;
+        flags.isDecrement = statement.isDecrement();
     }
 
     @Override
@@ -347,14 +347,14 @@ public class CodeGenerator implements IVisitor {
             expression.getLeft().accept(this);
         }
         flags.isGuard = wasGuard;
-        if (first.isImmediate()) {
+        if (first != null && first.isImmediate()) {
             writeLine("MOVFW 0 " + result.getPayload());
             if (!(result.isImmediate() && result.getPayload() == 0) && !flags.isSelfAssignment) {
                 writeLine("SUBFW 0" + first.getPayload());
             }
             writeLine(test);
         } else {
-            if (test != null && first != null) {
+            if (first != null) {
                 writeLine("MOVFW 0 " + first.getPayload());
                 if (!(result.isImmediate() && result.getPayload() == 0) && !flags.isSelfAssignment) {
                     writeLine("SUBFW 0 " + result.getPayload());
@@ -448,14 +448,14 @@ public class CodeGenerator implements IVisitor {
         boolean isWaitFalse, isClear;
         switch ((Token.TokenType) expression.getOperator()) {
             case QUERY:
-                if (isWaitFalse = isWaitFalse(expression)) {
+                if (isWaitFalse = expression.hasUnaryNot()) {
                     output.append(line++).append(" BTFSC ");
                 } else {
                     output.append(line++).append(" BTFSS ");
                 }
                 expression.getOperand().accept(this); // Maybe variable or get
                 if (!isWaitFalse) {
-                    if (!(expression.getOperand() instanceof GetExpr)) {
+                    if (!expression.hasGet()) {
                         output.append(0 + " ").append(result.getPayload()).append("\n");
                     } else {
                         output.append("\n");
@@ -464,14 +464,14 @@ public class CodeGenerator implements IVisitor {
                 output.append(line++).append(" GOTO ").append(line - 2).append("\n");
                 break;
             case OP:
-                if (isClear = isClear(expression)) {
+                if (isClear = expression.hasUnaryNot()) {
                     output.append(line++).append(" BCF ");
                 } else {
                     output.append(line++).append(" BSF ");
                 }
                 expression.getOperand().accept(this); // Maybe variable or get
                 if (!isClear) {
-                    if (!(expression.getOperand() instanceof GetExpr)) {
+                    if (!expression.hasGet()) {
                         output.append(0 + " ").append(result.getPayload()).append("\n");
                     } else {
                         output.append("\n");
@@ -482,7 +482,7 @@ public class CodeGenerator implements IVisitor {
                 flags.isNot = true;
                 expression.getOperand().accept(this); // Maybe variable or get
                 flags.isNot = false;
-                if (!(expression.getOperand() instanceof GetExpr) && !flags.isGuard) { // TODO check for isGuard elsewhere
+                if (!expression.hasGet() && !flags.isGuard) {
                     output.append(0 + " ").append(result.getPayload()).append("\n");
                 } else {
                     output.append("\n");
@@ -504,23 +504,7 @@ public class CodeGenerator implements IVisitor {
                 expression.getOperand().accept(this);
                 output.append(line++).append(" RRF 1 ").append(result.getPayload()).append("\n");
                 break;
-            default:
-                throw new Error(); // TODO need picl error
         }
-    }
-
-    private boolean isWaitFalse(UnaryExpr expression) {
-        if (expression.getOperand() instanceof UnaryExpr) {
-            return ((UnaryExpr) expression.getOperand()).getOperator() == NOT;
-        }
-        return false;
-    }
-
-    private boolean isClear(UnaryExpr expression) {
-        if (expression.getOperand() instanceof UnaryExpr) {
-            return ((UnaryExpr) expression.getOperand()).getOperator() == NOT;
-        }
-        return false;
     }
 
     @Override

@@ -33,4 +33,9 @@ public final class LiteralExpr implements IExpr {
         visitor.visitLiteralExpression(this);
     }
 
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

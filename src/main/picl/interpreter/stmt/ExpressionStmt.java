@@ -33,4 +33,8 @@ public final class ExpressionStmt implements IStmt {
         visitor.visitExpressionStatement(this);
     }
 
+    public boolean isDecrement() {
+        return expression.isDecrement();
+    }
+
 }

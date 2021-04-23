@@ -15,5 +15,10 @@ public class AssignmentExpr extends BinaryExpr {
     public void accept(IVisitor visitor) {
         visitor.visitAssignmentExpression(this);        
     }
-    
+
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

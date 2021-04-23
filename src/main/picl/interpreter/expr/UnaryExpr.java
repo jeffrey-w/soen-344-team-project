@@ -1,6 +1,7 @@
 package main.picl.interpreter.expr;
 
 import main.picl.interpreter.IVisitor;
+import main.picl.scanner.Token;
 import main.scanner.IToken;
 
 /**
@@ -43,6 +44,19 @@ public final class UnaryExpr implements IExpr {
     @Override
     public void accept(IVisitor visitor) {
         visitor.visitUnaryExpression(this);
+    }
+
+    @Override
+    public boolean isDecrement() {
+        return operator == Token.TokenType.DEC;
+    }
+
+    public boolean hasGet() {
+        return operand instanceof GetExpr;
+    }
+
+    public boolean hasUnaryNot() {
+        return operand instanceof UnaryExpr && ((UnaryExpr) operand).getOperator() == Token.TokenType.NOT;
     }
 
 }

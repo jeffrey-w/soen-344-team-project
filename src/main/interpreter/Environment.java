@@ -46,7 +46,7 @@ public final class Environment {
             value = currentScope.symbols.get(identifier);
             currentScope = currentScope.parent;
         } while (currentScope != null && value == null);
-        return value; // TODO throw picl error for undefined variable
+        return value; // TODO throw error for undefined variable
     }
 
     public Environment getParent() {

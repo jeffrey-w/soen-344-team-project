@@ -1,5 +1,7 @@
 package main.picl.interpreter.values;
 
+import main.picl.scanner.Token;
+
 public final class ImmediateValue extends AbstractValue {
 
     public ImmediateValue(int payload) {
@@ -12,6 +14,11 @@ public final class ImmediateValue extends AbstractValue {
             throw new Error(); // TODO need picl error
         }
         return payload;
+    }
+
+    @Override
+    public Enum<?> getType() {
+        return Token.TokenType.INT; // TODO this may not always be the case
     }
 
     @Override

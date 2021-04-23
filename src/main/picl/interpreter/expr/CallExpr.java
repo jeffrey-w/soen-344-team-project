@@ -53,4 +53,9 @@ public final class CallExpr implements IExpr {
         visitor.visitCallExpression(this);
     }
 
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }
