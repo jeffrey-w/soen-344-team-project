@@ -458,10 +458,10 @@ public final class CodeGenerator implements IVisitor {
                     if (!expression.hasGet()) {
                         output.append(0 + " ").append(result.getPayload()).append("\n");
                     } else {
-                        output.append("\n");
+                        newLine();
                     }
                 }
-                output.append(line++).append(" GOTO ").append(line - 2).append("\n");
+                writeLine("GOTO " + (line - 2));
                 break;
             case OP:
                 if (isClear = expression.hasUnaryNot()) {
@@ -490,19 +490,19 @@ public final class CodeGenerator implements IVisitor {
                 break;
             case INC:
                 expression.getOperand().accept(this);
-                output.append(line++).append(" INCF 1 ").append(result.getPayload()).append("\n");
+                writeLine("INCF 1 " + result.getPayload());
                 break;
             case DEC:
                 expression.getOperand().accept(this);
-                output.append(line++).append(" DECF 1 ").append(result.getPayload()).append("\n");
+                writeLine("DECF 1 " + result.getPayload());
                 break;
             case ROL:
                 expression.getOperand().accept(this);
-                output.append(line++).append(" RFL 1 ").append(result.getPayload()).append("\n");
+                writeLine("RFL 1 " + result.getPayload());
                 break;
             case ROR:
                 expression.getOperand().accept(this);
-                output.append(line++).append(" RRF 1 ").append(result.getPayload()).append("\n");
+                writeLine("RRF 1 "+ result.getPayload());
                 break;
         }
     }
@@ -511,10 +511,10 @@ public final class CodeGenerator implements IVisitor {
     public void visitCallExpression(final CallExpr expression) {
         if (expression.hasArgument()) {
             expression.getArgument().accept(this);
-            output.append(line++).append(" MOVFW 0 ").append(result.getPayload()).append("\n");
+            writeLine("MOVFW 0 " + result.getPayload());
         }
         expression.getCallee().accept(this);
-        output.append(line++).append(" CALL ").append(result.getPayload()).append("\n");
+        writeLine("CALL " + result.getPayload());
         flags.isReturn = true;
     }
 
@@ -537,7 +537,7 @@ public final class CodeGenerator implements IVisitor {
                 output.append(line++).append(" BTFSC 0 ").append(result.getPayload());
             }
             else{
-                output.append(line++).append(" BTFSS 0 ").append(result.getPayload()).append("\n");
+                writeLine("BTFSS 0 " + result.getPayload());
             }
         }
     }
