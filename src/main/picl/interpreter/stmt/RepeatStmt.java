@@ -1,7 +1,10 @@
 package main.picl.interpreter.stmt;
 
 import main.picl.interpreter.IVisitor;
+import main.picl.interpreter.expr.ComparisonExpr;
 import main.picl.interpreter.expr.IExpr;
+import main.picl.interpreter.expr.LiteralExpr;
+import main.picl.scanner.Token;
 
 /**
  * The type Repeat stmt.
@@ -52,6 +55,24 @@ public final class RepeatStmt implements IStmt {
     @Override
     public void accept(IVisitor visitor) {
         visitor.visitRepeatStatement(this);
+    }
+
+    public IExpr isSpecial(boolean isDecrement) {
+        if (isDecrement) {
+            if (hasGuard() && guard instanceof ComparisonExpr) {
+                ComparisonExpr comparison = (ComparisonExpr) guard;
+                if (comparison.getOperator() == Token.TokenType.EQL) {
+                    IExpr left = comparison.getLeft(), right = comparison.getRight();
+                    if (left instanceof LiteralExpr && ((LiteralExpr) left).getValue() == 0) {
+                        return right;
+                    }
+                    if (right instanceof LiteralExpr && ((LiteralExpr) right).getValue() == 0) {
+                        return left;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

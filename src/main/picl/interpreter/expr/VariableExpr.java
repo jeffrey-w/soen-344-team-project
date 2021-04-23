@@ -33,4 +33,9 @@ public final class VariableExpr implements IExpr {
         visitor.visitVariableExpression(this);
     }
 
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

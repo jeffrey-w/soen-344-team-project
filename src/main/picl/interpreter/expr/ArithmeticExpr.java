@@ -26,4 +26,9 @@ public class ArithmeticExpr extends BinaryExpr {
         visitor.visitArithmeticExpression(this);
     }
 
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

@@ -25,5 +25,10 @@ public class ComparisonExpr extends BinaryExpr {
     public void accept(IVisitor visitor) {
         visitor.visitComparisonExpression(this);        
     }
-    
+
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }

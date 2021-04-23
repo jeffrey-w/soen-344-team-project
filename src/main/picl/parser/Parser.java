@@ -1,7 +1,7 @@
 package main.picl.parser;
 
-import main.parser.IParser;
-import main.parser.ISyntaxTree;
+import main.picl.interpreter.parser.IParser;
+import main.picl.interpreter.parser.ISyntaxTree;
 import main.picl.interpreter.INode;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
@@ -12,7 +12,9 @@ import main.scanner.IScanner;
 import main.scanner.IToken;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static main.picl.scanner.Token.TokenType.*;
 
@@ -23,6 +25,7 @@ public class Parser implements IParser<INode> {
 
     private final IScanner scanner;
     private IToken previous, current;
+    private final Set<String> procedures;
 
     /**
      * Instantiates a new {@code Parser} with the specified {@code source} file.
@@ -32,6 +35,7 @@ public class Parser implements IParser<INode> {
     public Parser(String source) {
         scanner = new Scanner(source); // TODO use factory?
         current = scanner.getToken();
+        procedures = new HashSet<>();
     }
 
     @Override
@@ -115,6 +119,7 @@ public class Parser implements IParser<INode> {
         consume("Expect identifier after END keyword in PROCED declaration.", IDENTIFIER);
         ensureIdentifiersEqual(procedure.getIdentifier());
         consume("Expect ';' after PROCED declaration", SEMICOLON);
+        procedures.add(procedure.getIdentifier());
         return procedure;
     }
 
@@ -276,9 +281,14 @@ public class Parser implements IParser<INode> {
 
     private IExpr call() {
         IExpr left = primary();
-        if (match(LEFT_PARENTHESIS)) {
-            IExpr argument = assignment();
-            consume("Expect ')' after argument list in procedure call.", RIGHT_PARENTHESIS);
+        // TODO extract this
+        if (previous.getValue() instanceof String && procedures.contains((String) previous.getValue())) {
+            IExpr argument = null;
+            if (current.getType() == LEFT_PARENTHESIS) {
+                advance();
+                argument = assignment();
+                consume("Expect ')' after argument list in procedure call.", RIGHT_PARENTHESIS);
+            }
             left = new CallExpr(left, argument);
         } else if (match(PERIOD)) {
             IExpr index = primary();

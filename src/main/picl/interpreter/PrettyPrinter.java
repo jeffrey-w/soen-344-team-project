@@ -1,6 +1,6 @@
 package main.picl.interpreter;
 
-import main.parser.ISyntaxTree;
+import main.picl.interpreter.parser.ISyntaxTree;
 import main.picl.interpreter.decl.*;
 import main.picl.interpreter.expr.*;
 import main.picl.interpreter.stmt.*;

@@ -25,5 +25,10 @@ public class LogicalExpr extends BinaryExpr {
     public void accept(IVisitor visitor) {
         visitor.visitLogicalExpression(this);
     }
-    
+
+    @Override
+    public boolean isDecrement() {
+        return false;
+    }
+
 }
