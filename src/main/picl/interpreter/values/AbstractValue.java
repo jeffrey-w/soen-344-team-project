@@ -27,7 +27,7 @@ abstract class AbstractValue implements IValue {
     abstract int validatePayload(int payload);
 
     @Override
-    public int getPayload() {
+    public final int getPayload() {
         return payload;
     }
     
